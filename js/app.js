@@ -405,23 +405,33 @@
       kombination: "kombinierte",
     }[v] || "stationäre";
   }
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
   function formatDate(v) {
     if (!v) return "";
-    if (v instanceof Date) {
-      const d = v;
-      return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      return `${pad2(v.getDate())}.${pad2(v.getMonth() + 1)}.${v.getFullYear()}`;
     }
-    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
-      const [y, m, d] = v.split("-");
-      return `${d}.${m}.${y}`;
+    const s = String(v).trim();
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+    m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (m) return `${pad2(m[1])}.${pad2(m[2])}.${m[3]}`;
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) {
+      const a = parseInt(m[1], 10);
+      const b = parseInt(m[2], 10);
+      if (a > 12) return `${pad2(a)}.${pad2(b)}.${m[3]}`;
+      if (b > 12) return `${pad2(b)}.${pad2(a)}.${m[3]}`;
+      return `${pad2(a)}.${pad2(b)}.${m[3]}`;
     }
-    return v;
+    m = s.match(/^(\d{2})(\d{2})(\d{4})$/);
+    if (m) return `${m[1]}.${m[2]}.${m[3]}`;
+    return s;
   }
   function isoToInput(v) {
-    if (!v) return "";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-    const m = String(v).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    return m ? `${m[3]}-${m[2]}-${m[1]}` : v;
+    return formatDate(v);
   }
 
   function applyTokens(text) {
@@ -464,7 +474,7 @@
         else el.checked = !!val;
       } else if (el.type === "radio") {
         el.checked = String(val) === el.value;
-      } else if (el.type === "date") {
+      } else if (el.type === "date" || el.hasAttribute("data-date")) {
         el.value = isoToInput(val || "");
       } else {
         el.value = val == null ? "" : val;
@@ -529,8 +539,9 @@
       value = el.checked;
       set(src, path, value);
     } else {
-      value = el.value;
+      value = el.hasAttribute("data-date") ? formatDate(el.value) || el.value : el.value;
       set(src, path, value);
+      if (el.hasAttribute("data-date") && value && value !== el.value) el.value = value;
     }
     if (path === "stammdaten.leistungsform") applyLeistungsformDefaults();
     if (path === "stammdaten.erwerbstaetigkeit" && !current.g0450.letzteTaetigkeit) {
@@ -551,6 +562,7 @@
       if (!current.g0450.letzteKlinik) current.g0450.letzteKlinik = settings.einrichtung;
     }
     saveAll();
+    renderCaseList();
     document.querySelectorAll(`[data-fill]`).forEach((n) => (n.textContent = displayValue(n.getAttribute("data-fill"))));
     renderPrint();
     updateDerivedHints();
@@ -804,6 +816,15 @@
     document.body.addEventListener("focusin", (e) => {
       if (e.target.tagName === "TEXTAREA") lastFocus = e.target;
     });
+    document.body.addEventListener("blur", (e) => {
+      if (e.target.hasAttribute && e.target.hasAttribute("data-date") && e.target.value) {
+        const n = formatDate(e.target.value);
+        if (n && n !== e.target.value) {
+          e.target.value = n;
+          e.target.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      }
+    }, true);
     document.body.addEventListener("click", (e) => {
       const nav = e.target.closest(".nav-btn");
       if (nav) showView(nav.dataset.view);

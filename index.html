@@ -129,7 +129,7 @@
             <label class="field">Nachname<input type="text" data-bind="stammdaten.nachname" /></label>
             <label class="field">Vorname<input type="text" data-bind="stammdaten.vorname" /></label>
             <label class="field">Geburtsname<input type="text" data-bind="stammdaten.geburtsname" /></label>
-            <label class="field">Geburtsdatum<input type="date" data-bind="stammdaten.geburtsdatum" /></label>
+            <label class="field">Geburtsdatum<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.geburtsdatum" placeholder="z. B. 12.04.1975" /></label>
             <label class="field">Geschlecht
               <select data-bind="stammdaten.geschlecht">
                 <option value="">bitte wählen</option>
@@ -196,8 +196,8 @@
         <div class="card" style="margin-bottom:14px;">
           <h2>Aktueller Aufenthalt / Behandlung</h2>
           <div class="grid cols-3">
-            <label class="field">Aufnahme<input type="date" data-bind="stammdaten.aufnahmeDatum" /></label>
-            <label class="field">voraussichtliche Entlassung<input type="date" data-bind="stammdaten.entlassungDatum" /></label>
+            <label class="field">Aufnahme<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.aufnahmeDatum" placeholder="z. B. 18.03.2026" /></label>
+            <label class="field">voraussichtliche Entlassung<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.entlassungDatum" placeholder="z. B. 08.04.2026" /></label>
             <label class="field">Behandelnde (Name, Institution, Ort, Fachrichtung)
               <input type="text" data-bind="stammdaten.behandelnde" />
             </label>
