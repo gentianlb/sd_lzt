@@ -567,9 +567,17 @@
       }
     }
     if (path === "stammdaten.aufnahmeDatum") {
-      if (!current.g0450.abstinentSeit) current.g0450.abstinentSeit = formatDate(current.stammdaten.aufnahmeDatum);
-      if (!current.g0450.letzteVon) current.g0450.letzteVon = formatDate(current.stammdaten.aufnahmeDatum);
-      if (!current.g0450.letzteKlinik) current.g0450.letzteKlinik = settings.einrichtung;
+      const formatted = formatDate(current.stammdaten.aufnahmeDatum);
+      const complete = /^\d{2}\.\d{2}\.\d{4}$/.test(formatted);
+      if (complete) {
+        if (!current.g0450.abstinentSeit || !/^\d{2}\.\d{2}\.\d{4}$/.test(String(current.g0450.abstinentSeit))) {
+          current.g0450.abstinentSeit = formatted;
+        }
+        if (!current.g0450.letzteVon || !/^\d{2}\.\d{2}\.\d{4}$/.test(String(current.g0450.letzteVon))) {
+          current.g0450.letzteVon = formatted;
+        }
+        if (!current.g0450.letzteKlinik) current.g0450.letzteKlinik = settings.einrichtung;
+      }
     }
     saveAll();
     renderCaseList();
@@ -856,6 +864,23 @@
       if (viewBtn) showView(viewBtn.dataset.go);
       const printBtn = e.target.closest("[data-print]");
       if (printBtn) printDoc(printBtn.dataset.print);
+      const pdfBtn = e.target.closest("[data-pdf]");
+      if (pdfBtn) {
+        if (!window.SDLZT_PDF) {
+          alert("PDF-Bibliothek konnte nicht geladen werden.");
+          return;
+        }
+        pdfBtn.disabled = true;
+        window.SDLZT_PDF.download(pdfBtn.dataset.pdf, current, settings)
+          .then(() => setStatus("Originalformular gespeichert", true))
+          .catch((err) => {
+            console.error(err);
+            alert(err.message || String(err));
+          })
+          .finally(() => {
+            pdfBtn.disabled = false;
+          });
+      }
       const b = e.target.closest("[data-baustein]");
       if (b) {
         const items = window.SDLZT_BAUSTEINE[b.dataset.group] || [];

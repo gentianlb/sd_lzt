@@ -2,31 +2,36 @@
 
 Lokale HTML-Anwendung für den Sozialdienst: Antrag auf medizinische Rehabilitation bei Abhängigkeitserkrankungen (ambulant, tagesklinisch/ganztägig ambulant, stationär) inklusive Sozialbericht.
 
+Die Inhalte werden in die **originalen DRV-Formblätter** geschrieben (G0100, G0110, G0450, G0452). Es entsteht keine neue Layout-PDF, sondern eine ausgefüllte Kopie der Vorlage.
+
 Daten bleiben im Browser (`localStorage`). Es gibt keine Serveranbindung.
 
 ## Start
 
-Im Ordner die Datei `index.html` im Browser öffnen **oder** lokal ausliefern:
+Die Vorlagen liegen unter `forms/` und werden vom Browser geladen. Deshalb die App über einen lokalen Server öffnen:
+
+```bash
+./start.sh
+```
+
+oder
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Dann [http://localhost:8080](http://localhost:8080) öffnen. Ein lokaler Server ist nützlich, damit die Original-PDFs unter `forms/` direkt verlinkt werden können.
+Dann [http://localhost:8080](http://localhost:8080) öffnen.
 
 ## Ablauf
 
-1. **Einrichtung** – Klinik / Sozialdienst einmal hinterlegen (wird in jeden Sozialbericht übernommen).
-2. **Stammdaten** – Name, Geburtstag, VSNR, Krankenkasse, Suchtform, Leistungsform, Aufnahme. Diese Felder füllen G0100, G0110, G0450 und G0452 automatisch.
-3. **G0100** – Rehabilitationsantrag (Wunschkliniken, Beiträge, Vertretung).
-4. **G0110** – Anlage (AU, Gesundheit, Arbeitsplatz), soweit erforderlich.
-5. **G0450 Sozialbericht** – Freitexte mit Textbausteinen aus anonymisierten Beispielberichten; Rahmentext der Zusammenfassung per Knopf aus Stammdaten erzeugen.
-6. **G0452** – Einwilligung zur Weiterleitung des Sozialberichts.
-7. **Drucken** – Browserdialog „Als PDF speichern“. Zusätzlich liegen die leeren DRV-Formulare in `forms/`.
+1. **Einrichtung** – Klinik / Sozialdienst einmal hinterlegen.
+2. **Stammdaten** – Name, Geburtstag, VSNR, Krankenkasse, Suchtform, Leistungsform, Aufnahme. Diese Felder füllen alle Formblätter.
+3. **G0100 / G0110 / G0450 / G0452** – restliche Angaben und Sozialbericht (Textbausteine).
+4. **Originalformulare ausfüllen** – speichert die echten DRV-PDFs mit eingetragenen Feldern (Kreuze, Texte, Kopfdaten).
 
-Fälle können als JSON exportiert und wieder importiert werden (Übergabe zwischen Rechnern ohne Cloud).
+Fälle können als JSON exportiert und wieder importiert werden.
 
-## Formulare
+## Formulare (Vorlagen)
 
 | Datei | Inhalt |
 | --- | --- |
@@ -35,6 +40,4 @@ Fälle können als JSON exportiert und wieder importiert werden (Übergabe zwisc
 | `forms/G0450.pdf` | Sozialbericht – Psychosoziale Grunddaten |
 | `forms/G0452.pdf` | Information und Einwilligungserklärung |
 
-Die Druckfassung der App ist eine ausgefüllte Arbeitskopie für die Akte. Für den Versand an die DRV können die Originale parallel genutzt werden.
-
-Weitere Textbausteine lassen sich in `js/bausteine.js` ergänzen. Platzhalter: `{{anrede}}`, `{{pronomen}}`, `{{aufnahme}}`, `{{diagnose}}`, `{{leistungsformAdj}}`.
+Weitere Textbausteine: `js/bausteine.js`. Platzhalter: `{{anrede}}`, `{{pronomen}}`, `{{aufnahme}}`, `{{diagnose}}`, `{{leistungsformAdj}}`.

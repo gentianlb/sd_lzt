@@ -21,7 +21,7 @@
         <button class="btn ghost" id="btn-save" type="button">Speichern</button>
         <button class="btn ghost" id="btn-export" type="button">JSON exportieren</button>
         <label class="btn ghost">JSON importieren<input id="btn-import" type="file" accept="application/json" hidden /></label>
-        <button class="btn primary" data-print="all" type="button">Alles drucken</button>
+        <button class="btn primary" data-pdf="all" type="button">Originalformulare ausfüllen</button>
       </div>
     </header>
 
@@ -33,7 +33,7 @@
       <button class="nav-btn" data-view="g0110" type="button"><b>G0110 Anlage</b><small>AU, Gesundheit, Arbeitsplatz</small></button>
       <button class="nav-btn" data-view="g0450" type="button"><b>G0450 Sozialbericht</b><small>Psychosoziale Grunddaten</small></button>
       <button class="nav-btn" data-view="g0452" type="button"><b>G0452 Einwilligung</b><small>Anlage zum Sozialbericht</small></button>
-      <button class="nav-btn" data-view="druck" type="button"><b>Druck &amp; Original-PDFs</b><small>Vorschau und Formularvorlagen</small></button>
+      <button class="nav-btn" data-view="druck" type="button"><b>Originalformulare</b><small>DRV-Formblätter ausfüllen</small></button>
       <button class="nav-btn" data-view="settings" type="button"><b>Einrichtung</b><small>Sozialdienst / Klinik</small></button>
 
       <div class="nav-label">Gespeicherte Fälle</div>
@@ -69,8 +69,8 @@
           </div>
           <div class="ov-card">
             <h3>Checkliste</h3>
-            <p>1. Einrichtung prüfen · 2. Stammdaten · 3. G0100 Leistungsform · 4. G0110 falls erwerbstätig · 5. Sozialbericht G0450 · 6. Einwilligung G0452 unterschreiben lassen · 7. Drucken / als PDF speichern.</p>
-            <p class="status">Original-PDFs der DRV liegen im Ordner <code>forms/</code> und können zusätzlich beigelegt werden.</p>
+            <p>1. Einrichtung prüfen · 2. Stammdaten · 3. G0100 Leistungsform · 4. G0110 falls erwerbstätig · 5. Sozialbericht G0450 · 6. Einwilligung G0452 · 7. Originalformulare ausfüllen (echte DRV-PDFs).</p>
+            <p class="status">Die Inhalte werden in die echten DRV-Formblätter (G0100, G0110, G0450, G0452) geschrieben. Button oben: „Originalformulare ausfüllen“.</p>
           </div>
         </div>
       </section>
@@ -392,7 +392,7 @@
           </div>
           <div class="toolbar">
             <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0100.ortDatum"]'>Heutiges Datum einsetzen</button>
-            <button class="btn primary" type="button" data-print="g0100">G0100 drucken</button>
+            <button class="btn primary" type="button" data-pdf="G0100">G0100-Original ausfüllen</button>
           </div>
         </div>
       </section>
@@ -507,7 +507,7 @@
             <label class="field">Ort, Datum<input type="text" data-bind="g0110.ortDatum" /></label>
             <label class="field">Unterschrift<input type="text" data-bind="g0110.unterschrift" /></label>
           </div>
-          <button class="btn primary" type="button" data-print="g0110">G0110 drucken</button>
+          <button class="btn primary" type="button" data-pdf="G0110">G0110-Original ausfüllen</button>
         </div>
       </section>
 
@@ -684,7 +684,7 @@
             <textarea class="wide" style="min-height:220px;" data-bind="g0450.zusammenfassung"></textarea>
           </label>
           <label class="field">Ort, Datum<input type="text" data-bind="g0450.ortDatum" /></label>
-          <button class="btn primary" type="button" data-print="g0450">Sozialbericht drucken</button>
+          <button class="btn primary" type="button" data-pdf="G0450">G0450-Original ausfüllen</button>
         </div>
       </section>
 
@@ -708,32 +708,33 @@
             <label class="field">Unterschrift Einwilligung<input type="text" data-bind="g0452.unterschrift2" /></label>
           </div>
           <p class="status">Die Gesetzestexte (§§ 60–67 SGB I) stehen auf den Folgeseiten des Originalformulars in <code>forms/G0452.pdf</code>.</p>
-          <button class="btn primary" type="button" data-print="g0452">G0452 drucken</button>
+          <button class="btn primary" type="button" data-pdf="G0452">G0452-Original ausfüllen</button>
         </div>
       </section>
 
       <section class="view" id="view-druck">
         <div class="page-head">
-          <h1>Druck und Originalformulare</h1>
-          <p>Über „Drucken“ entsteht eine ausgefüllte A4-Fassung zum Speichern als PDF. Die leeren DRV-Originale liegen lokal im Ordner forms/.</p>
+          <h1>Originalformulare ausfüllen</h1>
+          <p>Die App schreibt in die echten DRV-Formblätter (nicht in ein neues Layout). Es entsteht eine ausgefüllte Kopie der Vorlage aus dem Ordner <code>forms/</code>.</p>
         </div>
         <div class="grid cols-2">
           <div class="card">
-            <h2>Ausgefüllte Fassung</h2>
+            <h2>Ausgefüllte DRV-Formblätter</h2>
             <div class="toolbar">
-              <button class="btn" type="button" data-print="g0100">G0100</button>
-              <button class="btn" type="button" data-print="g0110">G0110</button>
-              <button class="btn" type="button" data-print="g0450">G0450</button>
-              <button class="btn" type="button" data-print="g0452">G0452</button>
-              <button class="btn primary" type="button" data-print="all">Gesamtpaket</button>
+              <button class="btn" type="button" data-pdf="G0100">G0100</button>
+              <button class="btn" type="button" data-pdf="G0110">G0110</button>
+              <button class="btn" type="button" data-pdf="G0450">G0450</button>
+              <button class="btn" type="button" data-pdf="G0452">G0452</button>
+              <button class="btn primary" type="button" data-pdf="all">Alle vier</button>
             </div>
           </div>
           <div class="card">
-            <h2>Leere DRV-PDFs</h2>
+            <h2>Leere Vorlagen</h2>
             <p><a href="forms/G0100.pdf" target="_blank">G0100 Rehabilitationsantrag</a><br />
             <a href="forms/G0110.pdf" target="_blank">G0110 Anlage</a><br />
             <a href="forms/G0450.pdf" target="_blank">G0450 Sozialbericht</a><br />
             <a href="forms/G0452.pdf" target="_blank">G0452 Einwilligung</a></p>
+            <p class="status">Hinweis: die App über einen lokalen Server öffnen, damit die Vorlagen geladen werden können.</p>
           </div>
         </div>
       </section>
@@ -768,6 +769,8 @@
     <article class="print-doc" id="print-g0452"></article>
   </div>
 
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script src="js/pdf-fill.js"></script>
   <script src="js/bausteine.js"></script>
   <script src="js/app.js"></script>
 </body>
