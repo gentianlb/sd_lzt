@@ -192,9 +192,15 @@ input:focus, select:focus, textarea:focus {
   margin-left: 6px;
 }
 
-.bausteine { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
-.baustein-group { margin-bottom: 12px; }
-.baustein-group h4 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 700; }
+.bausteine { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 8px; }
+label.field .bausteine { order: 1; }
+label.field textarea { order: 2; }
+textarea.flash-target, input.flash-target {
+  outline: 2px solid #8ec8cb;
+  border-color: var(--teal);
+  background: #f4fbfb;
+  transition: background .5s ease, outline-color .5s ease;
+}
 
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .status { font-size: 12px; color: var(--muted); }

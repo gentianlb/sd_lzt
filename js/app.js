@@ -721,22 +721,49 @@
     reader.readAsText(file);
   }
 
-  function insertBaustein(text, generate) {
+  function resolveBausteinTarget(btn) {
+    const host = btn.closest("[data-bausteine]");
+    if (host) {
+      const sel = host.getAttribute("data-target");
+      if (sel) {
+        const el = document.querySelector(sel);
+        if (el) return el;
+      }
+      const nearby = host.parentElement && host.parentElement.querySelector("textarea, input[type='text']");
+      if (nearby) return nearby;
+    }
+    if (lastFocus && (lastFocus.tagName === "TEXTAREA" || lastFocus.tagName === "INPUT")) return lastFocus;
+    return document.querySelector(".view.active textarea");
+  }
+
+  function insertBaustein(btn, text, generate) {
     const value = generate === "zusammenfassung" ? zusammenfassungText() : applyTokens(text);
-    const ta = lastFocus && lastFocus.tagName === "TEXTAREA" ? lastFocus : document.querySelector(".view.active textarea");
+    const ta = resolveBausteinTarget(btn);
     if (!ta) {
-      navigator.clipboard.writeText(value);
-      setStatus("In Zwischenablage kopiert", true);
+      setStatus("Kein Zieltextfeld gefunden", false);
       return;
     }
-    const start = ta.selectionStart || ta.value.length;
-    const end = ta.selectionEnd || start;
-    const sep = ta.value && !ta.value.endsWith("\n") && start === ta.value.length ? "\n" : "";
-    ta.value = ta.value.slice(0, start) + sep + value + ta.value.slice(end);
+    const replace = generate === "zusammenfassung" || btn.dataset.replace === "1";
+    if (replace) {
+      ta.value = value;
+    } else {
+      const hasSelection =
+        typeof ta.selectionStart === "number" &&
+        typeof ta.selectionEnd === "number" &&
+        document.activeElement === ta &&
+        ta.selectionStart !== ta.selectionEnd;
+      const start = hasSelection ? ta.selectionStart : ta.value.length;
+      const end = hasSelection ? ta.selectionEnd : start;
+      const sep = ta.value && start === ta.value.length && !ta.value.endsWith("\n") ? "\n" : "";
+      ta.value = ta.value.slice(0, start) + sep + value + ta.value.slice(end);
+      const pos = start + sep.length + value.length;
+      ta.focus();
+      if (typeof ta.setSelectionRange === "function") ta.setSelectionRange(pos, pos);
+    }
     ta.dispatchEvent(new Event("input", { bubbles: true }));
-    ta.focus();
-    const pos = start + sep.length + value.length;
-    ta.setSelectionRange(pos, pos);
+    lastFocus = ta;
+    ta.classList.add("flash-target");
+    setTimeout(() => ta.classList.remove("flash-target"), 700);
   }
 
   function renderBausteine() {
@@ -885,7 +912,7 @@
       if (b) {
         const items = window.SDLZT_BAUSTEINE[b.dataset.group] || [];
         const it = items.find((x) => x.id === b.dataset.baustein);
-        if (it) insertBaustein(it.text, it.generate);
+        if (it) insertBaustein(b, it.text, it.generate);
       }
     });
     document.getElementById("btn-new").addEventListener("click", newCase);

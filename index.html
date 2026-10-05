@@ -514,7 +514,7 @@
       <section class="view" id="view-g0450">
         <div class="page-head">
           <h1>G0450 Sozialbericht</h1>
-          <p>Textbausteine stammen aus den anonymisierten Beispielberichten. Klick setzt den Baustein in das zuletzt fokussierte Textfeld. Platzhalter wie Name und Datum werden automatisch ersetzt.</p>
+          <p>Textbausteine stehen jeweils direkt über ihrem Textfeld. Ein Klick fügt den Baustein dort ein – ohne vorheriges Anklicken des Feldes. Platzhalter wie Name und Datum werden automatisch ersetzt.</p>
         </div>
         <div class="hint"><span data-fill="name"></span> · <span data-fill="diagnose"></span> · Aufnahme <span data-fill="aufnahme"></span> · <span data-fill="aufnehmend"></span></div>
 
@@ -557,25 +557,16 @@
 
         <div class="card" style="margin-bottom:14px;">
           <h2>3 Anamnese der Abhängigkeitserkrankung</h2>
-          <div class="baustein-group">
-            <h4>3.1 Anamnesedaten – Textbausteine</h4>
-            <div class="bausteine" data-bausteine="anamnese"></div>
-          </div>
-          <label class="field">Substanz, Beginn, Dauer, Dosis, Verlauf
+          <label class="field">3.1 Substanz, Beginn, Dauer, Dosis, Verlauf
+            <div class="bausteine" data-bausteine="anamnese" data-target='[data-bind="g0450.anamnese"]'></div>
             <textarea class="wide" data-bind="g0450.anamnese"></textarea>
           </label>
-          <div class="baustein-group">
-            <h4>3.2 Schädigungen / psychische Störungen</h4>
-            <div class="bausteine" data-bausteine="schaedigungen"></div>
-          </div>
-          <label class="field">Körperliche Schädigungen und psychische Störungen
+          <label class="field">3.2 Körperliche Schädigungen und psychische Störungen
+            <div class="bausteine" data-bausteine="schaedigungen" data-target='[data-bind="g0450.schaedigungen"]'></div>
             <textarea data-bind="g0450.schaedigungen"></textarea>
           </label>
-          <div class="baustein-group">
-            <h4>3.3 Abstinenzphasen</h4>
-            <div class="bausteine" data-bausteine="abstinenz"></div>
-          </div>
-          <label class="field">Abstinenzphasen
+          <label class="field">3.3 Abstinenzphasen
+            <div class="bausteine" data-bausteine="abstinenz" data-target='[data-bind="g0450.abstinenz"]'></div>
             <textarea data-bind="g0450.abstinenz"></textarea>
           </label>
           <div class="grid cols-3">
@@ -597,18 +588,12 @@
           <label class="field">4.1 Biographische und familiäre Ereignisse
             <textarea class="wide" data-bind="g0450.entwicklung"></textarea>
           </label>
-          <div class="baustein-group">
-            <h4>4.2 Umweltfaktoren</h4>
-            <div class="bausteine" data-bausteine="sozial"></div>
-          </div>
-          <label class="field">Umweltfaktoren
+          <label class="field">4.2 Umweltfaktoren
+            <div class="bausteine" data-bausteine="sozial" data-target='[data-bind="g0450.umwelt"]'></div>
             <textarea class="wide" data-bind="g0450.umwelt"></textarea>
           </label>
-          <div class="baustein-group">
-            <h4>Personbezogene Faktoren</h4>
-            <div class="bausteine" data-bausteine="person"></div>
-          </div>
           <label class="field">Personbezogene Faktoren
+            <div class="bausteine" data-bausteine="person" data-target='[data-bind="g0450.personbezogen"]'></div>
             <textarea data-bind="g0450.personbezogen"></textarea>
           </label>
           <div class="grid cols-3">
@@ -623,11 +608,8 @@
             <label class="field">letzte Tätigkeit<input type="text" data-bind="g0450.letzteTaetigkeit" /></label>
             <label class="field">arbeitslos seit<input type="text" data-bind="g0450.arbeitslosSeit" /></label>
           </div>
-          <div class="baustein-group">
-            <h4>4.5 Hinderungsgründe</h4>
-            <div class="bausteine" data-bausteine="hinder"></div>
-          </div>
-          <label class="field">Hinderungsgründe (Strafverfahren, Bewährung …; ggf. G0435)
+          <label class="field">4.5 Hinderungsgründe (Strafverfahren, Bewährung …; ggf. G0435)
+            <div class="bausteine" data-bausteine="hinder" data-target='[data-bind="g0450.hinderung"]'></div>
             <textarea data-bind="g0450.hinderung"></textarea>
           </label>
         </div>
@@ -642,19 +624,19 @@
           <div class="toolbar">
             <button class="btn small" type="button" data-generate="beratung-einr" data-target='[data-bind="g0450.beratungEinr"]'>Einrichtung übernehmen</button>
           </div>
-          <div class="bausteine" data-bausteine="vorbetreuung"></div>
           <label class="field">Art (Einzel / Gruppe / Selbsthilfe) und Umfang
+            <div class="bausteine" data-bausteine="vorbetreuung" data-target='[data-bind="g0450.beratungArt"]'></div>
             <textarea data-bind="g0450.beratungArt"></textarea>
           </label>
         </div>
 
         <div class="card" style="margin-bottom:14px;">
           <h2>6 Rehabilitationsziele</h2>
-          <div class="toolbar">
-            <button class="btn" type="button" data-generate="ziele" data-target='[data-bind="g0450.rehaZiele"]'>Standardziele einfügen</button>
-          </div>
-          <div class="bausteine" data-bausteine="ziele"></div>
           <label class="field">individuelle Ziele und Behandlungsbereitschaft
+            <div class="toolbar">
+              <button class="btn" type="button" data-generate="ziele" data-target='[data-bind="g0450.rehaZiele"]'>Standardziele einfügen</button>
+            </div>
+            <div class="bausteine" data-bausteine="ziele" data-target='[data-bind="g0450.rehaZiele"]'></div>
             <textarea class="wide" data-bind="g0450.rehaZiele"></textarea>
           </label>
           <label class="field">6.2 Bei erneuter Beantragung: Problembereiche
@@ -664,8 +646,8 @@
 
         <div class="card" style="margin-bottom:14px;">
           <h2>7 Leistungsform und Einrichtung</h2>
-          <div class="bausteine" data-bausteine="schwerpunkt"></div>
           <label class="field">7.1 Schwerpunktsetzung
+            <div class="bausteine" data-bausteine="schwerpunkt" data-target='[data-bind="g0450.schwerpunkt"]'></div>
             <textarea data-bind="g0450.schwerpunkt"></textarea>
           </label>
           <label class="field">7.2 Wünsche zur Klinik / Leistungsform (Sprache, Barrierefreiheit, Tiere, Nahtlostermin …)
@@ -675,12 +657,12 @@
 
         <div class="card">
           <h2>8 Zusammenfassung</h2>
-          <div class="toolbar">
-            <button class="btn primary" type="button" data-generate="zusammenfassung" data-target='[data-bind="g0450.zusammenfassung"]'>Rahmentext aus Stammdaten erzeugen</button>
-            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0450.ortDatum"]'>Ort, Datum setzen</button>
-          </div>
-          <div class="bausteine" data-bausteine="zusammen"></div>
           <label class="field">Zusammenfassung und ergänzende Bemerkungen
+            <div class="toolbar">
+              <button class="btn primary" type="button" data-generate="zusammenfassung" data-target='[data-bind="g0450.zusammenfassung"]'>Rahmentext aus Stammdaten erzeugen</button>
+              <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0450.ortDatum"]'>Ort, Datum setzen</button>
+            </div>
+            <div class="bausteine" data-bausteine="zusammen" data-target='[data-bind="g0450.zusammenfassung"]'></div>
             <textarea class="wide" style="min-height:220px;" data-bind="g0450.zusammenfassung"></textarea>
           </label>
           <label class="field">Ort, Datum<input type="text" data-bind="g0450.ortDatum" /></label>
