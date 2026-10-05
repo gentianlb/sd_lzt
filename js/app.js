@@ -19,6 +19,7 @@
   const emptyCase = () => ({
     id: uid(),
     titel: "Neuer Antrag",
+    titelCustom: false,
     erstellt: new Date().toISOString(),
     geaendert: new Date().toISOString(),
     stammdaten: {
@@ -484,7 +485,13 @@
       el.textContent = displayValue(el.getAttribute("data-fill"));
     });
     const title = document.getElementById("case-title");
-    if (title) title.value = current.titel || "";
+    if (title) {
+      if (!current.titelCustom) {
+        const n = [current.stammdaten.nachname, current.stammdaten.vorname].filter(Boolean).join(", ");
+        if (n) current.titel = n;
+      }
+      title.value = current.titel || "";
+    }
     renderCaseList();
     renderPrint();
     updateDerivedHints();
@@ -523,6 +530,7 @@
     const el = e.target;
     if (el.id === "case-title") {
       current.titel = el.value;
+      current.titelCustom = true;
       saveAll();
       renderCaseList();
       return;
@@ -550,11 +558,13 @@
     if (path === "stammdaten.arbeitslosSeit" && !current.g0450.arbeitslosSeit) {
       current.g0450.arbeitslosSeit = current.stammdaten.arbeitslosSeit;
     }
-    if ((path === "stammdaten.nachname" || path === "stammdaten.vorname") && (!current.titel || current.titel === "Neuer Antrag")) {
+    if (path === "stammdaten.nachname" || path === "stammdaten.vorname") {
       const n = [current.stammdaten.nachname, current.stammdaten.vorname].filter(Boolean).join(", ");
-      if (n) current.titel = n;
-      const title = document.getElementById("case-title");
-      if (title && n) title.value = n;
+      if (!current.titelCustom) {
+        current.titel = n || "Neuer Antrag";
+        const title = document.getElementById("case-title");
+        if (title) title.value = current.titel;
+      }
     }
     if (path === "stammdaten.aufnahmeDatum") {
       if (!current.g0450.abstinentSeit) current.g0450.abstinentSeit = formatDate(current.stammdaten.aufnahmeDatum);
@@ -617,7 +627,19 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  function isBlankCase(c) {
+    if (!c) return false;
+    const s = c.stammdaten || {};
+    return !s.nachname && !s.vorname && !s.vsnr && (c.titel === "Neuer Antrag" || !c.titel);
+  }
+
   function newCase() {
+    if (isBlankCase(current)) {
+      bindAll();
+      showView("stammdaten");
+      setStatus("Leerer Antrag ist bereits geöffnet", true);
+      return;
+    }
     current = emptyCase();
     current.g0450.letzteKlinik = settings.einrichtung;
     current.g0450.beratungEinr = settings.station
