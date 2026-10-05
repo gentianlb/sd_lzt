@@ -45,15 +45,15 @@ a { color: var(--teal-dark); }
 .brand strong { font-size: 15px; letter-spacing: .02em; }
 .brand span { font-size: 12px; opacity: .85; }
 .case-meta { flex: 1; display: flex; align-items: center; gap: 10px; }
-.case-meta input {
+.case-meta input[type="text"] {
   width: min(420px, 100%);
-  border: 0;
+  border: 1px solid rgba(255,255,255,.35);
   border-radius: 999px;
   padding: 8px 14px;
-  background: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.14);
   color: #fff;
 }
-.case-meta input::placeholder { color: rgba(255,255,255,.7); }
+.case-meta input[type="text"]::placeholder { color: rgba(255,255,255,.7); }
 .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .btn {
