@@ -636,13 +636,11 @@
     list.forEach((s) => {
       const d = (current.g0450.substanzen || {})[s.id];
       if (!d || !d.on) return;
-      let line = s.label;
       const bits = [];
-      if (d.beginn) bits.push("Beginn des Konsums: " + d.beginn);
-      if (d.dosis) bits.push("aktuelle Dosis: " + d.dosis);
+      if (d.beginn) bits.push("Beginn des Konsums " + d.beginn);
+      if (d.dosis) bits.push("aktuelle Dosis " + d.dosis);
       if (d.verlauf) bits.push("Verlauf über die letzten Jahre: " + d.verlauf);
-      if (bits.length) line += ". " + bits.join(". ");
-      parts.push(line + ".");
+      parts.push(s.label + (bits.length ? ": " + bits.join("; ") : "") + ".");
     });
     if (!parts.length) return "";
     return p.anrede + " berichtet über folgenden Substanzgebrauch:\n\n" + parts.join("\n");
