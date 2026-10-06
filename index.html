@@ -439,6 +439,16 @@
           </div>
         </div>
         <div class="card" style="margin-bottom:14px;">
+          <h2>17 Unterschrift</h2>
+          <p class="help-block">Finale Unterschrift der antragstellenden Person. Die Einwilligung unter 16.1 bleibt auf dem Originalformular frei.</p>
+          <label class="field">Ort, Datum
+            <input type="text" data-bind="g0100.ortDatum" />
+          </label>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0100.ortDatum"]'>Ort und Datum einfügen</button>
+          </div>
+        </div>
+        <div class="card">
           <h2>18 Angabe der gesetzlichen Krankenkasse</h2>
           <p class="help-block">Sofern die Antragstellung auf Leistungen zur Teilhabe über die Krankenkasse erfolgt, benötigen wir das Institutionskennzeichen der Krankenkasse. Diese Angaben werden nicht automatisch übernommen.</p>
           <div class="checkrow" style="margin-bottom:12px;">
@@ -609,7 +619,9 @@
               <label><input type="checkbox" data-bind="g0110.bildschirm" /> überwiegend Bildschirmarbeit</label>
               <label><input type="checkbox" data-bind="g0110.sehvermoegen" /> besondere Anforderungen an das Sehvermögen</label>
             </div>
-            <label class="field" style="margin-top:10px;max-width:240px;">Anfahrtszeit in Minuten<input type="text" data-bind="g0110.anfahrtMin" /></label>
+            <div class="reveal" id="anfahrt-min">
+              <label class="field" style="max-width:240px;">Anfahrtszeit in Minuten<input type="text" data-bind="g0110.anfahrtMin" /></label>
+            </div>
           </div>
 
           <label class="field" style="margin-top:12px;">Bei welchen Tätigkeiten bestehen aktuell Einschränkungen?
@@ -667,8 +679,17 @@
           <label class="field">Einwilligung, dass sich RV-Träger / Reha-Arzt mit dem Betriebsarzt oder Betrieb in Verbindung setzt
             <select data-bind="g0110.einwillBetrieb"><option value=""></option><option>ja</option><option>nein</option></select>
           </label>
-          <p class="help-block">Ort und Datum der Unterschrift am Ende des Formulars werden beim Ausfüllen mit dem heutigen Datum gesetzt.</p>
-          <button class="btn primary" type="button" data-pdf="G0110">G0110-Original ausfüllen</button>
+          <h3 class="sub">Unterschrift</h3>
+          <p class="help-block">Finale Unterschrift der antragstellenden Person.</p>
+          <div class="grid cols-2">
+            <label class="field">Ort, Datum
+              <input type="text" data-bind="g0110.ortDatum" />
+            </label>
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0110.ortDatum"]'>Ort und Datum einfügen</button>
+            <button class="btn primary" type="button" data-pdf="G0110">G0110-Original ausfüllen</button>
+          </div>
         </div>
       </section>
 
@@ -745,7 +766,6 @@
               <button class="btn primary" type="button" id="btn-substanz-satz">Satz in 3.1 einfügen</button>
             </div>
           </div>
-          <div class="bausteine" data-bausteine="anamnese" data-target='[data-bind="g0450.anamnese"]'></div>
           <textarea class="wide" data-bind="g0450.anamnese"></textarea>
 
           <h3 class="sub">3.2 Körperliche Schädigungen und psychische Störungen</h3>
@@ -808,7 +828,9 @@
             <textarea data-bind="g0450.Werdegang"></textarea>
           </label>
           <div class="grid cols-2">
-            <label class="field">letzte Tätigkeit<input type="text" data-bind="g0450.letzteTaetigkeit" /></label>
+            <label class="field">letzte Tätigkeit<span class="help">wird aus G0110 übernommen, hier unabhängig änderbar</span>
+              <input type="text" data-bind="g0450.letzteTaetigkeit" />
+            </label>
             <label class="field">arbeitslos seit<input type="text" data-bind="g0450.arbeitslosSeit" /></label>
           </div>
           <label class="field">4.5 Hinderungsgründe (Strafverfahren, Bewährung …; ggf. G0435)
@@ -825,9 +847,6 @@
             <label class="field">Beratungsstelle / Einrichtung<input type="text" data-bind="g0450.beratungEinr" /></label>
             <label class="field">letzter persönlicher Kontakt am<input type="text" data-bind="g0450.letzterKontakt" /></label>
           </div>
-          <div class="toolbar">
-            <button class="btn small" type="button" data-generate="beratung-einr" data-target='[data-bind="g0450.beratungEinr"]'>Einrichtung übernehmen</button>
-          </div>
           <label class="field">5.2 Art (Einzel / Gruppe / Selbsthilfegruppe) und Umfang (Anzahl) der Kontakte
             <div class="bausteine" data-bausteine="vorbetreuung" data-target='[data-bind="g0450.beratungArt"]'></div>
             <textarea data-bind="g0450.beratungArt"></textarea>
@@ -837,9 +856,6 @@
         <div class="card" style="margin-bottom:14px;">
           <h2>6 Rehabilitationsziele und Behandlungsbereitschaft</h2>
           <label class="field">6.1 Individuelle Ziele und Behandlungsbereitschaft
-            <div class="toolbar">
-              <button class="btn" type="button" data-generate="ziele" data-target='[data-bind="g0450.rehaZiele"]'>Standardziele einfügen</button>
-            </div>
             <div class="bausteine" data-bausteine="ziele" data-target='[data-bind="g0450.rehaZiele"]'></div>
             <textarea class="wide" data-bind="g0450.rehaZiele"></textarea>
           </label>
@@ -868,8 +884,15 @@
             <div class="bausteine" data-bausteine="zusammen" data-target='[data-bind="g0450.zusammenfassung"]'></div>
             <textarea class="wide" style="min-height:220px;" data-bind="g0450.zusammenfassung"></textarea>
           </label>
-          <p class="help-block">Ort und Datum der Unterschrift am Ende des Sozialberichts werden beim Ausfüllen mit dem heutigen Datum gesetzt.</p>
-          <button class="btn primary" type="button" data-pdf="G0450">G0450-Original ausfüllen</button>
+          <h3 class="sub">Unterschrift</h3>
+          <p class="help-block">Ort und Datum am Ende des Sozialberichts (Unterschrift der aufnehmenden Person).</p>
+          <label class="field">Ort, Datum
+            <input type="text" data-bind="g0450.ortDatum" />
+          </label>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0450.ortDatum"]'>Ort und Datum einfügen</button>
+            <button class="btn primary" type="button" data-pdf="G0450">G0450-Original ausfüllen</button>
+          </div>
         </div>
       </section>
 
@@ -887,12 +910,16 @@
             <label><input type="checkbox" data-bind="g0452.traegerEinrichtung" /> Rehabilitationseinrichtung</label>
           </div>
           <div class="grid cols-2" style="margin-top:12px;">
+            <label class="field">Ort, Datum (Information)<input type="text" data-bind="g0452.ortDatum1" /></label>
             <label class="field">Unterschrift Antragsteller/in (Information)<input type="text" data-bind="g0452.unterschrift1" /></label>
+            <label class="field">Ort, Datum (Einwilligung)<input type="text" data-bind="g0452.ortDatum2" /></label>
             <label class="field">Unterschrift Einwilligung<input type="text" data-bind="g0452.unterschrift2" /></label>
           </div>
-          <p class="help-block">Ort und Datum beider Unterschriften am Ende werden beim Ausfüllen mit dem heutigen Datum gesetzt.</p>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum-beide" data-target='[data-bind="g0452.ortDatum1"]'>Ort und Datum einfügen</button>
+            <button class="btn primary" type="button" data-pdf="G0452">G0452-Original ausfüllen</button>
+          </div>
           <p class="status">Die Gesetzestexte (§§ 60–67 SGB I) stehen auf den Folgeseiten des Originalformulars in <code>forms/G0452.pdf</code>.</p>
-          <button class="btn primary" type="button" data-pdf="G0452">G0452-Original ausfüllen</button>
         </div>
       </section>
 

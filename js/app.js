@@ -287,6 +287,7 @@
       kinderHaushalt: "",
       Werdegang: "",
       letzteTaetigkeit: "",
+      letzteTaetigkeitCustom: false,
       arbeitslosSeit: "",
       hinderung: "",
       beratungAm: "",
@@ -363,6 +364,12 @@
     n.auRowCount = Math.min(4, Math.max(1, rows));
     if (!c.g0450.substanzen || typeof c.g0450.substanzen !== "object") c.g0450.substanzen = {};
     if (!c.g0450.entzugSymptome || typeof c.g0450.entzugSymptome !== "object") c.g0450.entzugSymptome = {};
+    if (
+      c.g0450.letzteTaetigkeit &&
+      c.g0450.letzteTaetigkeit !== (c.g0110.taetigkeit || "")
+    ) {
+      c.g0450.letzteTaetigkeitCustom = true;
+    }
   }
 
   function uid() {
@@ -693,7 +700,9 @@
 
   function bindAll() {
     migrateCase(current);
-    applyHeutigeUnterschriften();
+    if (!current.g0450.letzteTaetigkeitCustom && current.g0110.taetigkeit) {
+      current.g0450.letzteTaetigkeit = current.g0110.taetigkeit;
+    }
     renderAuRows();
     renderHaltung();
     renderSubstanzBuilder();
@@ -724,6 +733,7 @@
     renderCaseList();
     renderPrint();
     updateDerivedHints();
+    updateAnfahrtMin();
   }
 
   function displayValue(key) {
@@ -777,9 +787,13 @@
       if (el.hasAttribute("data-date") && value && value !== el.value) el.value = value;
     }
     if (path === "stammdaten.leistungsform") applyLeistungsformDefaults();
-    if (path === "stammdaten.erwerbstaetigkeit" && !current.g0450.letzteTaetigkeit) {
-      current.g0450.letzteTaetigkeit = current.stammdaten.erwerbstaetigkeit;
+    if (path === "g0110.taetigkeit" && !current.g0450.letzteTaetigkeitCustom) {
+      current.g0450.letzteTaetigkeit = current.g0110.taetigkeit || "";
+      const el = document.querySelector('[data-bind="g0450.letzteTaetigkeit"]');
+      if (el) el.value = current.g0450.letzteTaetigkeit;
     }
+    if (path === "g0450.letzteTaetigkeit") current.g0450.letzteTaetigkeitCustom = true;
+    if (path === "g0110.anfahrt") updateAnfahrtMin();
     if (path === "stammdaten.arbeitslosSeit" && !current.g0450.arbeitslosSeit) {
       current.g0450.arbeitslosSeit = current.stammdaten.arbeitslosSeit;
     }
@@ -839,6 +853,12 @@
     current.g0450.ortDatum = v;
     current.g0452.ortDatum1 = v;
     current.g0452.ortDatum2 = v;
+  }
+
+  function updateAnfahrtMin() {
+    const box = document.getElementById("anfahrt-min");
+    if (!box) return;
+    box.classList.toggle("open", !!current.g0110.anfahrt);
   }
 
   function applyLeistungsformDefaults() {
@@ -905,11 +925,6 @@
     }
     current = emptyCase();
     current.g0450.letzteKlinik = settings.einrichtung;
-    current.g0450.beratungEinr = settings.station
-      ? `${settings.einrichtung} ${settings.station}`
-      : settings.einrichtung;
-    current.g0450.rehaZiele = window.SDLZT_STANDARD_ZIELE;
-    applyHeutigeUnterschriften();
     applyLeistungsformDefaults();
     cases.unshift(current);
     saveAll();
@@ -1220,17 +1235,24 @@
           current.g0450.rehaZiele = window.SDLZT_STANDARD_ZIELE;
           if (target) target.value = current.g0450.rehaZiele;
         } else if (kind === "ortdatum") {
-          const val = `${settings.ort}, ${formatDate(new Date())}`;
+          const val = heuteOrtDatum();
           if (target) {
             target.value = val;
             target.dispatchEvent(new Event("input", { bubbles: true }));
+            setStatus("Ort und Datum eingefügt", true);
             return;
           }
-        } else if (kind === "beratung-einr") {
-          current.g0450.beratungEinr = settings.station
-            ? `${settings.einrichtung} ${settings.station}`
-            : settings.einrichtung;
-          if (target) target.value = current.g0450.beratungEinr;
+        } else if (kind === "ortdatum-beide") {
+          const val = heuteOrtDatum();
+          current.g0452.ortDatum1 = val;
+          current.g0452.ortDatum2 = val;
+          const a = document.querySelector('[data-bind="g0452.ortDatum1"]');
+          const b = document.querySelector('[data-bind="g0452.ortDatum2"]');
+          if (a) a.value = val;
+          if (b) b.value = val;
+          saveAll();
+          setStatus("Ort und Datum eingefügt", true);
+          return;
         }
         saveAll();
         bindAll();
@@ -1241,10 +1263,7 @@
   function boot() {
     if (!cases.length) {
       current = emptyCase();
-      current.g0450.rehaZiele = window.SDLZT_STANDARD_ZIELE;
       current.g0450.letzteKlinik = settings.einrichtung;
-      current.g0450.beratungEinr = settings.einrichtung;
-      applyHeutigeUnterschriften();
       applyLeistungsformDefaults();
       cases = [current];
       saveAll();

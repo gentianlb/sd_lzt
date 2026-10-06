@@ -239,7 +239,7 @@
     setText(form, "ALTER_1", g.kinderAlter);
     setText(form, "ANZAHL_2", g.kinderHaushalt);
     setText(form, "WERDEGANG_1", g.Werdegang);
-    setText(form, "TAETIG_1", g.letzteTaetigkeit || s.erwerbstaetigkeit);
+    setText(form, "TAETIG_1", g.letzteTaetigkeit || (data.g0110 && data.g0110.taetigkeit) || "");
     setText(form, "DATUM_1", g.arbeitslosSeit || s.arbeitslosSeit);
     setText(form, "HINDER_1", g.hinderung);
     setText(form, "AM_1", g.beratungAm);
@@ -251,7 +251,7 @@
     setText(form, "SCHWERPUNKT", g.schwerpunkt);
     setText(form, "LEISTFORM_1", g.wunschLeistform);
     setText(form, "ZUSAMMEN_1", g.zusammenfassung);
-    setText(form, "ORT_DATUM_1", g.ortDatum || heuteOrtDatum(settings));
+    setText(form, "ORT_DATUM_1", g.ortDatum);
   }
 
   function fillG0452(form, data, settings) {
@@ -268,9 +268,9 @@
     setCheck(form, "AW_1_1", !!e.traegerKK);
     setCheck(form, "AW_1_2", !!e.traegerEingliederung);
     setCheck(form, "AW_1_3", !!e.traegerEinrichtung);
-    setText(form, "Ort_Datum", e.ortDatum1 || heuteOrtDatum(settings));
+    setText(form, "Ort_Datum", e.ortDatum1);
     setText(form, "ANTRAGST_UNTERS", e.unterschrift1 || vollname(s));
-    setText(form, "Ort_Datum_2", e.ortDatum2 || heuteOrtDatum(settings));
+    setText(form, "Ort_Datum_2", e.ortDatum2);
     setText(form, "ANTRAGST_UNTERS_2", e.unterschrift2 || vollname(s));
   }
 
@@ -379,7 +379,7 @@
     setCheck(form, "AW_DOKU_ZUG_3", !!a.dokuVollschrift);
     setCheck(form, "AW_DOKU_ZUG_4", !!a.dokuCd);
     setCheck(form, "AW_DOKU_ZUG_6", !!a.dokuDaisy);
-    setText(form, "VERS_ORT_DAT", a.ortDatum || heuteOrtDatum(settings));
+    setText(form, "VERS_ORT_DAT", a.ortDatum);
     setText(form, "VERS_UNTERSCHRIFT", a.unterschrift || vollname(s));
     if (a.kkUebernehmen) {
       setText(form, "KK_NAME2", a.kkName18 || s.kkName);
@@ -476,7 +476,7 @@
     setCheck(form, "AW_PAUSEN", !!n.keinePausen);
     setCheck(form, "AW_BILDSCHIRM", !!n.bildschirm);
     setCheck(form, "AW_BESONDERE", !!n.sehvermoegen);
-    setText(form, "VERS_AMINUTEN", n.anfahrtMin);
+    setText(form, "VERS_AMINUTEN", n.anfahrt ? n.anfahrtMin : "");
     setText(form, "VERS_EINSCHR", n.einschraenkungen);
     setText(form, "VERS_AR_PLATZ", n.arbeitsplatzBem);
     setText(form, "ARZT_NAME_VORNAME_ANSCH", n.arzt1);
@@ -498,7 +498,7 @@
     setText(form, "BETRARZT_TELEF", n.betriebsarztTel);
     setText(form, "BETR_ARZT_ANSCHR", n.betriebsarztAnschr);
     jaNein(form, "AW_ERKLAER", n.einwillBetrieb);
-    setText(form, "VERS_ORT_DAT", n.ortDatum || heuteOrtDatum(settings));
+    setText(form, "VERS_ORT_DAT", n.ortDatum);
     setText(form, "VERS_UNTERSCH", n.unterschrift || vollname(data.stammdaten));
   }
 

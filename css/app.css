@@ -293,7 +293,8 @@ textarea.flash-target, input.flash-target {
   border-radius: 10px;
   padding: 12px;
 }
-.dropdown-panel.open { display: block; }
+.reveal { display: none; margin-top: 10px; }
+.reveal.open { display: block; }
 .checkgrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

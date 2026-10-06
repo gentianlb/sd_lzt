@@ -32,12 +32,6 @@ window.SDLZT_ENTZUG = [
 ];
 
 window.SDLZT_BAUSTEINE = {
-  anamnese: [
-    { id: "alk-unruhe", label: "Alkohol bei Unruhe/Angst", text: "Auslösende Bedingungen: {{anrede}} trinke aufgrund von Ängstlichkeit und Unruhe, auch um Traurigkeit zu betäuben. Trinkt gern in Gesellschaft." },
-    { id: "schicht-schlaf", label: "Schicht / Schlafprobleme", text: "Als aufrechterhaltende Bedingungen werden Schichtarbeit, Überforderung und Schlafprobleme benannt. Belastende Erlebnisse wurden durch den Konsum verdrängt." },
-    { id: "schmerz-opioid", label: "Schmerzmittel-Kontext", text: "Aufgrund chronischer Schmerzen sei {{anrede}} mehrfach in schmerzmedizinischer Behandlung gewesen. Daraus entwickelte sich ein abhängiger Gebrauch." },
-    { id: "gluecksspiel", label: "Glücksspiel / Online", text: "Zusätzlich habe {{pronomen}} viel Geld in Sportwetten und Online-Spiele investiert." }
-  ],
   schaedigungen: [
     { id: "psychose", label: "Drogeninduzierte Psychose", text: "Drogeninduzierte Psychose bekannt seit … Während des Konsums Veränderungen: Antriebslosigkeit, Gleichgültigkeit, Einsamkeit, Schlaflosigkeit." },
     { id: "wesensaenderung", label: "Wesensänderung", text: "Wesens- und Verhaltensänderungen unter Konsum: …" },
@@ -69,7 +63,7 @@ window.SDLZT_BAUSTEINE = {
     { id: "entgiftung-therapien", label: "Entgiftung inkl. weiterer Therapien", text: "Im Rahmen der stationären Entgiftungsbehandlung stattfindende Einzelgespräche, Gruppengespräche sowie weitere Therapien." }
   ],
   ziele: [
-    { id: "standard", label: "Standardziele", text: "psychische Stabilisierung und Erlangen von Abstinenzfähigkeit,\npsychotherapeutische Behandlung im Kontext der Abhängigkeitserkrankung,\nGesünder leben, stabile Abstinenz erreichen, Tagesstruktur erreichen, Eigenfürsorge/Eigenverantwortung erlernen, Abgrenzungsfähigkeit erlernen, neue Lebensinhalte entdecken, positives Lebensgefühl erlangen" },
+    { id: "standard", label: "Standardziele", text: "Psychische Stabilisierung und Erlangen von Abstinenzfähigkeit, psychotherapeutische Behandlung im Kontext der Abhängigkeitserkrankung, gesünder leben, stabile Abstinenz erreichen, Tagesstruktur aufbauen, Eigenfürsorge und Eigenverantwortung erlernen, Abgrenzungsfähigkeit entwickeln, neue Lebensinhalte entdecken und ein positives Lebensgefühl erlangen." },
     { id: "arbeit-adaption", label: "Arbeit / Adaption", text: "Wiederaufnahme einer Erwerbstätigkeit (Adaption sollte in Erwägung gezogen werden)" },
     { id: "beruf-orient", label: "Berufliche Orientierung", text: "Lebensweg finden, berufliche Orientierung (Adaption sollte in Erwägung gezogen werden)" },
     { id: "trauer", label: "Trauer / Trauma", text: "Trauerbewältigung/Traumaverarbeitung, Lebensweg finden" },
@@ -93,6 +87,4 @@ window.SDLZT_BAUSTEINE = {
   ]
 };
 
-window.SDLZT_STANDARD_ZIELE = `psychische Stabilisierung und Erlangen von Abstinenzfähigkeit,
-psychotherapeutische Behandlung im Kontext der Abhängigkeitserkrankung,
-Gesünder leben, stabile Abstinenz erreichen, Tagesstruktur erreichen, Eigenfürsorge/Eigenverantwortung erlernen, Abgrenzungsfähigkeit erlernen, neue Lebensinhalte entdecken, positives Lebensgefühl erlangen`;
+window.SDLZT_STANDARD_ZIELE = `Psychische Stabilisierung und Erlangen von Abstinenzfähigkeit, psychotherapeutische Behandlung im Kontext der Abhängigkeitserkrankung, gesünder leben, stabile Abstinenz erreichen, Tagesstruktur aufbauen, Eigenfürsorge und Eigenverantwortung erlernen, Abgrenzungsfähigkeit entwickeln, neue Lebensinhalte entdecken und ein positives Lebensgefühl erlangen.`;
