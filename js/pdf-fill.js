@@ -53,6 +53,11 @@
   function vollname(s) {
     return [s.nachname, s.vorname].filter(Boolean).join(", ");
   }
+  function heuteOrtDatum(settings) {
+    const ort = settings && settings.ort ? settings.ort : "";
+    const d = germanDate(new Date());
+    return [ort, d].filter(Boolean).join(", ");
+  }
 
   function setText(form, name, value) {
     if (value == null || value === "") return;
@@ -246,7 +251,7 @@
     setText(form, "SCHWERPUNKT", g.schwerpunkt);
     setText(form, "LEISTFORM_1", g.wunschLeistform);
     setText(form, "ZUSAMMEN_1", g.zusammenfassung);
-    setText(form, "ORT_DATUM_1", g.ortDatum);
+    setText(form, "ORT_DATUM_1", g.ortDatum || heuteOrtDatum(settings));
   }
 
   function fillG0452(form, data, settings) {
@@ -263,13 +268,13 @@
     setCheck(form, "AW_1_1", !!e.traegerKK);
     setCheck(form, "AW_1_2", !!e.traegerEingliederung);
     setCheck(form, "AW_1_3", !!e.traegerEinrichtung);
-    setText(form, "Ort_Datum", e.ortDatum1);
+    setText(form, "Ort_Datum", e.ortDatum1 || heuteOrtDatum(settings));
     setText(form, "ANTRAGST_UNTERS", e.unterschrift1 || vollname(s));
-    setText(form, "Ort_Datum_2", e.ortDatum2);
+    setText(form, "Ort_Datum_2", e.ortDatum2 || heuteOrtDatum(settings));
     setText(form, "ANTRAGST_UNTERS_2", e.unterschrift2 || vollname(s));
   }
 
-  function fillG0100(form, data) {
+  function fillG0100(form, data, settings) {
     const s = data.stammdaten;
     const a = data.g0100;
     setText(form, "PAF_VSNR_trim", s.vsnr);
@@ -374,14 +379,15 @@
     setCheck(form, "AW_DOKU_ZUG_3", !!a.dokuVollschrift);
     setCheck(form, "AW_DOKU_ZUG_4", !!a.dokuCd);
     setCheck(form, "AW_DOKU_ZUG_6", !!a.dokuDaisy);
-    setCheck(form, "AW_NACHWEIS", a.nachweis);
-    setText(form, "VERS_ORT_DAT", a.ortDatum);
+    setText(form, "VERS_ORT_DAT", a.ortDatum || heuteOrtDatum(settings));
     setText(form, "VERS_UNTERSCHRIFT", a.unterschrift || vollname(s));
-    setText(form, "KK_NAME2", s.kkName);
-    setText(form, "KK_IK", s.kkIk);
+    if (a.kkUebernehmen) {
+      setText(form, "KK_NAME2", a.kkName18 || s.kkName);
+      setText(form, "KK_IK", a.kkIk || s.kkIk);
+    }
   }
 
-  function fillG0110(form, data) {
+  function fillG0110(form, data, settings) {
     const s = data.stammdaten;
     const n = data.g0110;
     setText(form, "PAF_VSNR_trim", s.vsnr);
@@ -492,7 +498,7 @@
     setText(form, "BETRARZT_TELEF", n.betriebsarztTel);
     setText(form, "BETR_ARZT_ANSCHR", n.betriebsarztAnschr);
     jaNein(form, "AW_ERKLAER", n.einwillBetrieb);
-    setText(form, "VERS_ORT_DAT", n.ortDatum);
+    setText(form, "VERS_ORT_DAT", n.ortDatum || heuteOrtDatum(settings));
     setText(form, "VERS_UNTERSCH", n.unterschrift || vollname(data.stammdaten));
   }
 

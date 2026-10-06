@@ -134,6 +134,9 @@
       dokuVollschrift: false,
       dokuCd: false,
       dokuDaisy: false,
+      kkUebernehmen: false,
+      kkName18: "",
+      kkIk: "",
       nachweis: "",
       ortDatum: "",
       unterschrift: "",
@@ -690,6 +693,7 @@
 
   function bindAll() {
     migrateCase(current);
+    applyHeutigeUnterschriften();
     renderAuRows();
     renderHaltung();
     renderSubstanzBuilder();
@@ -738,8 +742,9 @@
       diagnose: s.diagnose || diagnoseFromSucht(s),
       sucht: suchtLabels(s).join(", ") || "—",
       aufnahme: formatDate(s.aufnahmeDatum) || "—",
+      entlassung: formatDate(s.entlassungDatum) || "—",
       beruf: [s.erwerbstaetigkeit, s.berufsstellung].filter(Boolean).join(" · ") || "—",
-      arzt: [s.arztVorname, s.arztName].filter(Boolean).join(" ") || s.behandelnde || "—",
+      arzt: [s.arztVorname, s.arztName].filter(Boolean).join(" ") || "—",
     };
     return map[key] ?? "";
   }
@@ -782,8 +787,27 @@
       const n = [current.stammdaten.nachname, current.stammdaten.vorname].filter(Boolean).join(", ");
       if (!current.titelCustom) current.titel = n || "Neuer Antrag";
     }
-    if (path.startsWith("g0450.substanzen") && path.endsWith(".on")) updateSubstanzPanels();
-    if (path.startsWith("g0450.entzugSymptome")) updateEntzugChecks();
+    if (path === "g0100.kkUebernehmen") {
+      if (value) {
+        current.g0100.kkName18 = current.stammdaten.kkName || "";
+        current.g0100.kkIk = current.stammdaten.kkIk || "";
+        const nameEl = document.querySelector('[data-bind="g0100.kkName18"]');
+        const ikEl = document.querySelector('[data-bind="g0100.kkIk"]');
+        if (nameEl) nameEl.value = current.g0100.kkName18;
+        if (ikEl) ikEl.value = current.g0100.kkIk;
+      } else {
+        current.g0100.kkName18 = "";
+        current.g0100.kkIk = "";
+        const nameEl = document.querySelector('[data-bind="g0100.kkName18"]');
+        const ikEl = document.querySelector('[data-bind="g0100.kkIk"]');
+        if (nameEl) nameEl.value = "";
+        if (ikEl) ikEl.value = "";
+      }
+    }
+    if (current.g0100.kkUebernehmen && (path === "stammdaten.kkName" || path === "stammdaten.kkIk")) {
+      current.g0100.kkName18 = current.stammdaten.kkName || "";
+      current.g0100.kkIk = current.stammdaten.kkIk || "";
+    }
     if (path === "stammdaten.aufnahmeDatum") {
       const formatted = formatDate(current.stammdaten.aufnahmeDatum);
       const complete = /^\d{2}\.\d{2}\.\d{4}$/.test(formatted);
@@ -802,6 +826,19 @@
     document.querySelectorAll(`[data-fill]`).forEach((n) => (n.textContent = displayValue(n.getAttribute("data-fill"))));
     renderPrint();
     updateDerivedHints();
+  }
+
+  function heuteOrtDatum() {
+    return `${settings.ort}, ${formatDate(new Date())}`;
+  }
+
+  function applyHeutigeUnterschriften() {
+    const v = heuteOrtDatum();
+    current.g0100.ortDatum = v;
+    current.g0110.ortDatum = v;
+    current.g0450.ortDatum = v;
+    current.g0452.ortDatum1 = v;
+    current.g0452.ortDatum2 = v;
   }
 
   function applyLeistungsformDefaults() {
@@ -872,10 +909,7 @@
       ? `${settings.einrichtung} ${settings.station}`
       : settings.einrichtung;
     current.g0450.rehaZiele = window.SDLZT_STANDARD_ZIELE;
-    current.g0450.ortDatum = `${settings.ort}, ${formatDate(new Date())}`;
-    current.g0100.ortDatum = `${settings.ort}, ${formatDate(new Date())}`;
-    current.g0452.ortDatum1 = `${settings.ort}, ${formatDate(new Date())}`;
-    current.g0452.ortDatum2 = `${settings.ort}, ${formatDate(new Date())}`;
+    applyHeutigeUnterschriften();
     applyLeistungsformDefaults();
     cases.unshift(current);
     saveAll();
@@ -1048,7 +1082,8 @@
       </section>
       <section class="print-page">${header("G0100", "Sozialversicherung und sonstige Angaben", "Seite 3")}
         ${box("10–12 Beiträge und sonstige Angaben", `<div class="print-kv">${kv("10.1 Beiträge DRV", a.beitragDRV)}${kv("10.2 Auslandsbeiträge", a.auslandsbeitrag)}${kv("Staat / vom / bis", [a.auslandStaat, a.auslandVom, a.auslandBis].filter(Boolean).join(" · "))}${kv("10.3 aktuell Ausland", a.auslandsbeitragAktuell)}${kv("11 Jobcenter", a.jobcenter + (a.jobcenterName ? " · " + a.jobcenterName : ""))}${kv("12.1 Beamtenversorgung", a.beamter)}${kv("12.2 Rente / Antrag", a.rente)}${kv("RV-Träger", a.renteTraeger)}${kv("12.4 anerkannte Gesundheitsstörungen", a.gesundheitAnerkannt)}${kv("Stelle / Aktenzeichen", [a.gesundheitStelle, a.gesundheitAktenz].filter(Boolean).join(" · "))}${kv("12.5 Regress / Unfall", a.regress)}${kv("Schadensersatz", a.schaden)}${kv("12.6 Reha letzte 4 Jahre", a.reha4Jahre)}${kv("Stelle zuletzt", a.rehaStelle)}${kv("Aktenzeichen", a.rehaAktenz)}${kv("vom / bis", [a.rehaVom, a.rehaBis].filter(Boolean).join(" – "))}${kv("12.7 Mutter-/Vater-Kind", a.mutterVater)}${kv("13 Vertretung", a.vertretung)}${kv("14 Kommunikationshilfe", a.kommunikation)}</div>`)}
-        ${box("Unterschrift", `<div class="print-kv">${kv("Ort, Datum", a.ortDatum)}${kv("Unterschrift", a.unterschrift || name)}</div>`)}
+        ${box("17 Unterschrift", `<div class="print-kv">${kv("Ort, Datum", a.ortDatum)}${kv("Unterschrift", a.unterschrift || name)}</div>`)}
+        ${box("18 Angabe der gesetzlichen Krankenkasse", `<div class="print-kv">${kv("übernommen", a.kkUebernehmen ? "ja" : "nein")}${kv("Name der Krankenkasse", a.kkUebernehmen ? a.kkName18 : "")}${kv("Institutionskennzeichen", a.kkUebernehmen ? a.kkIk : "")}</div>`)}
       </section>`;
 
     document.getElementById("print-g0110").innerHTML = `
@@ -1209,7 +1244,7 @@
       current.g0450.rehaZiele = window.SDLZT_STANDARD_ZIELE;
       current.g0450.letzteKlinik = settings.einrichtung;
       current.g0450.beratungEinr = settings.einrichtung;
-      current.g0450.ortDatum = `${settings.ort}, ${formatDate(new Date())}`;
+      applyHeutigeUnterschriften();
       applyLeistungsformDefaults();
       cases = [current];
       saveAll();

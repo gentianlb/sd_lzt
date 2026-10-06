@@ -156,10 +156,6 @@
             <label class="field">Wohnort<input type="text" data-bind="stammdaten.ort" /></label>
             <label class="field">Telefon<input type="tel" data-bind="stammdaten.telefon" /></label>
             <label class="field">Telefax<input type="tel" data-bind="stammdaten.telefax" /></label>
-            <label class="field">derzeitiger Aufenthaltsort (falls abweichend)<input type="text" data-bind="stammdaten.aufenthaltsort" /></label>
-            <label class="field">Niederlassung / Aufenthalt
-              <span class="checkrow"><label><input type="checkbox" data-bind="stammdaten.aufenthaltserlaubnis" /> Erlaubnis liegt vor, Kopie beigefügt</label></span>
-            </label>
           </div>
         </div>
 
@@ -186,19 +182,28 @@
         </div>
 
         <div class="card" style="margin-bottom:14px;">
-          <h2>Aktueller Aufenthalt / Behandlung</h2>
+          <h2>Aktueller Aufenthalt</h2>
+          <p class="help-block">Aufnahme und voraussichtliche Entlassung der aktuellen Behandlung. Der Aufenthaltsort erscheint im Sozialbericht, falls er von der Wohnanschrift abweicht.</p>
           <div class="grid cols-3">
             <label class="field">Aufnahme<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.aufnahmeDatum" placeholder="z. B. 18.03.2026" /></label>
             <label class="field">voraussichtliche Entlassung<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.entlassungDatum" placeholder="z. B. 08.04.2026" /></label>
-            <label class="field">Behandelnde (Name, Institution, Ort, Fachrichtung)
-              <input type="text" data-bind="stammdaten.behandelnde" />
+            <label class="field">derzeitiger Aufenthaltsort (falls abweichend)<input type="text" data-bind="stammdaten.aufenthaltsort" /></label>
+            <label class="field">Niederlassung / Aufenthalt
+              <span class="checkrow"><label><input type="checkbox" data-bind="stammdaten.aufenthaltserlaubnis" /> Erlaubnis liegt vor, Kopie beigefügt</label></span>
             </label>
-            <label class="field">Arzt Name<input type="text" data-bind="stammdaten.arztName" /></label>
-            <label class="field">Arzt Vorname<input type="text" data-bind="stammdaten.arztVorname" /></label>
-            <label class="field">Arzt Telefon<input type="tel" data-bind="stammdaten.arztTelefon" /></label>
-            <label class="field">Arzt Straße<input type="text" data-bind="stammdaten.arztStrasse" /></label>
-            <label class="field">Arzt PLZ<input type="text" data-bind="stammdaten.arztPlz" /></label>
-            <label class="field">Arzt Ort<input type="text" data-bind="stammdaten.arztOrt" /></label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Behandelnde Ärztin / behandelnder Arzt</h2>
+          <p class="help-block">Entspricht Punkt 9 des Rehabilitationsantrags G0100. Hier die Ärztin oder den Arzt angeben, die oder der die Patientin / den Patienten regelmäßig behandelt – in der Regel die Hausärztin / der Hausarzt, nicht die Klinik der aktuellen Entgiftung.</p>
+          <div class="grid cols-3">
+            <label class="field">Name<input type="text" data-bind="stammdaten.arztName" /></label>
+            <label class="field">Vorname<input type="text" data-bind="stammdaten.arztVorname" /></label>
+            <label class="field">Telefon<input type="tel" data-bind="stammdaten.arztTelefon" /></label>
+            <label class="field">Straße, Hausnummer<input type="text" data-bind="stammdaten.arztStrasse" /></label>
+            <label class="field">PLZ<input type="text" data-bind="stammdaten.arztPlz" /></label>
+            <label class="field">Ort<input type="text" data-bind="stammdaten.arztOrt" /></label>
           </div>
         </div>
 
@@ -433,21 +438,17 @@
             <label><input type="checkbox" data-bind="g0100.dokuDaisy" /> als Hörmedium (CD-DAISY)</label>
           </div>
         </div>
-        <div class="card">
-          <h2>16–17 Erklärung und Unterschrift</h2>
-          <label class="field">Nachweis über fehlende Einsichtsfähigkeit / Einwilligungsfähigkeit
-            <select data-bind="g0100.nachweis">
-              <option value=""></option>
-              <option value="ist beigefügt">ist beigefügt</option>
-              <option value="wird nachgereicht">wird nachgereicht</option>
-            </select>
-          </label>
-          <div class="grid cols-2">
-            <label class="field">Ort, Datum<input type="text" data-bind="g0100.ortDatum" /></label>
-            <label class="field">Unterschrift / Name<input type="text" data-bind="g0100.unterschrift" /></label>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>18 Angabe der gesetzlichen Krankenkasse</h2>
+          <p class="help-block">Sofern die Antragstellung auf Leistungen zur Teilhabe über die Krankenkasse erfolgt, benötigen wir das Institutionskennzeichen der Krankenkasse. Diese Angaben werden nicht automatisch übernommen.</p>
+          <div class="checkrow" style="margin-bottom:12px;">
+            <label><input type="checkbox" data-bind="g0100.kkUebernehmen" /> Angaben aus den Stammdaten übernehmen</label>
           </div>
-          <div class="toolbar">
-            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0100.ortDatum"]'>Heutiges Datum einsetzen</button>
+          <div class="grid cols-2">
+            <label class="field">Name der Krankenkasse<input type="text" data-bind="g0100.kkName18" /></label>
+            <label class="field">Institutionskennzeichen<input type="text" data-bind="g0100.kkIk" /></label>
+          </div>
+          <div class="toolbar" style="margin-top:12px;">
             <button class="btn primary" type="button" data-pdf="G0100">G0100-Original ausfüllen</button>
           </div>
         </div>
@@ -666,10 +667,7 @@
           <label class="field">Einwilligung, dass sich RV-Träger / Reha-Arzt mit dem Betriebsarzt oder Betrieb in Verbindung setzt
             <select data-bind="g0110.einwillBetrieb"><option value=""></option><option>ja</option><option>nein</option></select>
           </label>
-          <div class="grid cols-2">
-            <label class="field">Ort, Datum<input type="text" data-bind="g0110.ortDatum" /></label>
-            <label class="field">Unterschrift<input type="text" data-bind="g0110.unterschrift" /></label>
-          </div>
+          <p class="help-block">Ort und Datum der Unterschrift am Ende des Formulars werden beim Ausfüllen mit dem heutigen Datum gesetzt.</p>
           <button class="btn primary" type="button" data-pdf="G0110">G0110-Original ausfüllen</button>
         </div>
       </section>
@@ -683,14 +681,18 @@
 
         <div class="card" style="margin-bottom:14px;">
           <h2>1 Angaben zur Person</h2>
-          <p class="help-block">Name, Versicherung, Suchtform, Aufenthalt und Behandelnde kommen aus den <button class="btn small" type="button" data-go="stammdaten">Stammdaten</button>.</p>
+          <p class="help-block">Name, Versicherung, Suchtform und aktueller Aufenthalt kommen aus den <button class="btn small" type="button" data-go="stammdaten">Stammdaten</button>.</p>
           <div class="print-kv preview-kv">
             <div>Name, Vorname</div><div><span data-fill="name"></span></div>
             <div>Geburtsdatum</div><div><span data-fill="geburtsdatum"></span></div>
             <div>Versicherungsnummer</div><div><span data-fill="vsnr"></span></div>
             <div>Krankenkasse</div><div><span data-fill="kk"></span></div>
             <div>Suchtform</div><div><span data-fill="sucht"></span></div>
+            <div>Aufnahme / Entlassung</div><div><span data-fill="aufnahme"></span> – <span data-fill="entlassung"></span></div>
           </div>
+          <label class="field" style="margin-top:12px;">Behandelnde (auch Psychotherapeutin / Psychotherapeut; Name, Institution, Ort, Fachrichtung)
+            <input type="text" data-bind="stammdaten.behandelnde" placeholder="z. B. Klinikarzt der aktuellen Entgiftung" />
+          </label>
         </div>
 
         <div class="card" style="margin-bottom:14px;">
@@ -862,12 +864,11 @@
           <label class="field">Zusammenfassung und ergänzende Bemerkungen
             <div class="toolbar">
               <button class="btn primary" type="button" data-generate="zusammenfassung" data-target='[data-bind="g0450.zusammenfassung"]'>Rahmentext aus Stammdaten erzeugen</button>
-              <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0450.ortDatum"]'>Ort, Datum setzen</button>
             </div>
             <div class="bausteine" data-bausteine="zusammen" data-target='[data-bind="g0450.zusammenfassung"]'></div>
             <textarea class="wide" style="min-height:220px;" data-bind="g0450.zusammenfassung"></textarea>
           </label>
-          <label class="field">Ort, Datum<input type="text" data-bind="g0450.ortDatum" /></label>
+          <p class="help-block">Ort und Datum der Unterschrift am Ende des Sozialberichts werden beim Ausfüllen mit dem heutigen Datum gesetzt.</p>
           <button class="btn primary" type="button" data-pdf="G0450">G0450-Original ausfüllen</button>
         </div>
       </section>
@@ -886,11 +887,10 @@
             <label><input type="checkbox" data-bind="g0452.traegerEinrichtung" /> Rehabilitationseinrichtung</label>
           </div>
           <div class="grid cols-2" style="margin-top:12px;">
-            <label class="field">Ort, Datum (Information)<input type="text" data-bind="g0452.ortDatum1" /></label>
-            <label class="field">Unterschrift Antragsteller/in<input type="text" data-bind="g0452.unterschrift1" /></label>
-            <label class="field">Ort, Datum (Einwilligung)<input type="text" data-bind="g0452.ortDatum2" /></label>
+            <label class="field">Unterschrift Antragsteller/in (Information)<input type="text" data-bind="g0452.unterschrift1" /></label>
             <label class="field">Unterschrift Einwilligung<input type="text" data-bind="g0452.unterschrift2" /></label>
           </div>
+          <p class="help-block">Ort und Datum beider Unterschriften am Ende werden beim Ausfüllen mit dem heutigen Datum gesetzt.</p>
           <p class="status">Die Gesetzestexte (§§ 60–67 SGB I) stehen auf den Folgeseiten des Originalformulars in <code>forms/G0452.pdf</code>.</p>
           <button class="btn primary" type="button" data-pdf="G0452">G0452-Original ausfüllen</button>
         </div>
