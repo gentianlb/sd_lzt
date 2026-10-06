@@ -1,17 +1,46 @@
+window.SDLZT_SUBSTANZEN = [
+  { id: "alkohol", label: "Alkohol" },
+  { id: "cannabis", label: "Cannabis" },
+  { id: "heroin", label: "Heroin" },
+  { id: "kokain", label: "Kokain / Crack" },
+  { id: "amphetamine", label: "Amphetamine / Speed" },
+  { id: "crystal", label: "Crystal Meth" },
+  { id: "benzodiazepine", label: "Benzodiazepine" },
+  { id: "opioide", label: "Opioid-Schmerzmittel" },
+  { id: "substitution", label: "Substitutionsmittel" },
+  { id: "gluecksspiel", label: "Glücksspiel" },
+  { id: "sonstige", label: "Sonstige / pathologisches Verhalten" }
+];
+
+window.SDLZT_ENTZUG = [
+  { id: "zittern", label: "Zittern" },
+  { id: "schwitzen", label: "Schwitzen" },
+  { id: "unruhe", label: "Unruhe / innere Anspannung" },
+  { id: "herzrasen", label: "Herzrasen" },
+  { id: "uebelkeit", label: "Übelkeit" },
+  { id: "erbrechen", label: "Erbrechen" },
+  { id: "magenschmerzen", label: "Magenschmerzen" },
+  { id: "schlaf", label: "Schlafstörungen" },
+  { id: "angst", label: "Angst" },
+  { id: "reizbarkeit", label: "Reizbarkeit / Aggressivität" },
+  { id: "halluzinationen", label: "Halluzinationen" },
+  { id: "kreislauf", label: "Kreislaufprobleme" },
+  { id: "kopfschmerzen", label: "Kopfschmerzen" },
+  { id: "frieren", label: "Frieren" },
+  { id: "krampfanfall", label: "Krampfanfall vorbekannt", kind: "vorbekannt" },
+  { id: "delirium", label: "Delirium vorbekannt", kind: "vorbekannt" }
+];
+
 window.SDLZT_BAUSTEINE = {
   anamnese: [
-    { id: "alk-unruhe", label: "Alkohol bei Unruhe/Angst", text: "{{anrede}} trinke Alkohol aufgrund von Ängstlichkeit und Unruhe. Über den Tag verteilt trinke {{pronomen}} … Trinkt gern in Gesellschaft. Regelmäßiger Alkoholkonsum seit mind. … Jahren. Vor … Jahren sei es zum Problem geworden. {{pronomenCap}} habe versucht, Traurigkeit zu betäuben." },
-    { id: "cannabis-verlauf", label: "Cannabis-Verlauf", text: "Erster Cannabiskonsum im Alter von … Jahren. Regelmäßiger Konsum bis zum … Lebensjahr. Danach längere Pause, da psychotische Zustände unter gleichzeitigem Konsum weiterer Substanzen aufgetreten seien. Die letzte Konsumphase habe über einen Zeitraum von ca. … Monaten stattgefunden. Täglich habe {{pronomen}} … geraucht, u. a. aufgrund von Schichtarbeit, Überforderung und Schlafproblemen. Belastende Erlebnisse wurden dadurch verdrängt." },
-    { id: "polytox", label: "Längere Substanzanamnese", text: "Längere Substanzanamnese: Erster Konsum im Alter von … Jahren. Im weiteren Verlauf Konsum von … Heroin / Kokain / Amphetamine / Cannabis / Alkohol. Aktuell stehe … im Vordergrund. Auslösende und aufrechterhaltende Bedingungen: …" },
-    { id: "schmerz-opioid", label: "Schmerzmittel / Opioide", text: "Aktuelle Substanzanamnese: Aufgrund chronischer Schmerzen / Phantomschmerzen sei {{anrede}} mehrfach in schmerzmedizinischer Behandlung gewesen. Es entwickelte sich ein abhängiger Gebrauch von … (z. B. Oxycodon). Dosierung zuletzt: …" },
+    { id: "alk-unruhe", label: "Alkohol bei Unruhe/Angst", text: "Auslösende Bedingungen: {{anrede}} trinke aufgrund von Ängstlichkeit und Unruhe, auch um Traurigkeit zu betäuben. Trinkt gern in Gesellschaft." },
+    { id: "schicht-schlaf", label: "Schicht / Schlafprobleme", text: "Als aufrechterhaltende Bedingungen werden Schichtarbeit, Überforderung und Schlafprobleme benannt. Belastende Erlebnisse wurden durch den Konsum verdrängt." },
+    { id: "schmerz-opioid", label: "Schmerzmittel-Kontext", text: "Aufgrund chronischer Schmerzen sei {{anrede}} mehrfach in schmerzmedizinischer Behandlung gewesen. Daraus entwickelte sich ein abhängiger Gebrauch." },
     { id: "gluecksspiel", label: "Glücksspiel / Online", text: "Zusätzlich habe {{pronomen}} viel Geld in Sportwetten und Online-Spiele investiert." }
   ],
   schaedigungen: [
-    { id: "koerper-alk", label: "Körperlich Alkohol", text: "körperlich: Zittern, Unruhe, Schwitzen, Frieren, Erbrechen, Magenschmerzen" },
-    { id: "psych-alk", label: "Psychisch Alkohol", text: "psychisch: Angst, Schlafprobleme, Stimmungsschwankungen, Aggressivität, Halluzinationen" },
-    { id: "entzug", label: "Entzugssymptome", text: "Kennt Entzugssymptome: Zittern, Schwitzen, Herzrasen, Magenschmerzen" },
     { id: "psychose", label: "Drogeninduzierte Psychose", text: "Drogeninduzierte Psychose bekannt seit … Während des Konsums Veränderungen: Antriebslosigkeit, Gleichgültigkeit, Einsamkeit, Schlaflosigkeit." },
-    { id: "opioid-sym", label: "Körperlich/psychisch Opioide", text: "Körperlich: Zittern, Kreislaufprobleme, Sehstörung, Mundtrockenheit, Juckreiz.\n\nPsychisch: Unruhe, Nervosität, Anspannung, Depressionen, Schlaflosigkeit." },
+    { id: "wesensaenderung", label: "Wesensänderung", text: "Wesens- und Verhaltensänderungen unter Konsum: …" },
     { id: "suizid", label: "Suizidversuch", text: "Suizidversuch am … (z. B. Tabletten und Alkohol)." }
   ],
   abstinenz: [

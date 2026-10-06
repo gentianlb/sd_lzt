@@ -211,6 +211,95 @@ textarea.flash-target, input.flash-target {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+.overview.single { grid-template-columns: 1fr; max-width: 640px; }
+.card h3.sub {
+  margin: 18px 0 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.card h3.sub:first-of-type { border-top: 0; padding-top: 0; margin-top: 4px; }
+.help-block { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 400; }
+.preview-kv { display: grid; grid-template-columns: 160px 1fr; gap: 6px 12px; font-size: 13px; }
+.preview-kv div:nth-child(odd) { color: var(--muted); }
+
+.au-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+.au-actions { display: flex; gap: 6px; min-height: 40px; }
+.au-row .btn.icon {
+  min-width: 38px;
+  height: 40px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  border-radius: 10px;
+}
+
+.wp-block {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 12px;
+  background: #fafbfa;
+}
+.wp-block h3 { margin: 0 0 10px; font-size: 14px; }
+.wp-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px 14px;
+}
+.wp-checks label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 13px;
+}
+.haltung {
+  display: grid;
+  grid-template-columns: 180px repeat(3, 1fr);
+  gap: 6px 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.haltung .h-head { font-size: 11px; color: var(--muted); font-weight: 700; text-align: center; }
+.haltung .h-label { font-weight: 600; }
+.haltung label { justify-content: center; display: flex; }
+
+.builder-panel {
+  border: 1px solid #c5e0e0;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 8px 0 12px;
+  background: var(--teal-soft);
+}
+.substanz-card {
+  background: #fff;
+  border: 1px solid #c5e0e0;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 8px;
+}
+.dropdown-panel {
+  display: none;
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+}
+.dropdown-panel.open { display: block; }
+.checkgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px 12px;
+}
+.checkgrid label { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13px; }
 .ov-card {
   background: #fff;
   border-radius: 12px;

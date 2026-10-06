@@ -1,4 +1,4 @@
-# Therapieantrag Sucht (Sozialdienst)
+# Antrag auf Therapieleistung (Sozialdienst)
 
 Lokale HTML-Anwendung für den Sozialdienst: Antrag auf medizinische Rehabilitation bei Abhängigkeitserkrankungen (ambulant, tagesklinisch/ganztägig ambulant, stationär) inklusive Sozialbericht.
 

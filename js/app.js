@@ -105,10 +105,12 @@
       gesundheitAktenz: "",
       gesundheitStoerung: "",
       gesundheitAntrag: "nein",
+      gesundheitAntragStelle: "",
       regress: "nein",
       schaden: "nein",
       schadenAm: "",
       schadenStelle: "",
+      schadenAktenz: "",
       reha4Jahre: "nein",
       rehaStelle: "",
       rehaAktenz: "",
@@ -138,6 +140,7 @@
     },
     g0110: {
       auDauer: "",
+      auRowCount: 1,
       au1Zeit: "",
       au1Wegen: "",
       au2Zeit: "",
@@ -166,10 +169,10 @@
       stehend: "",
       gehend: "",
       sitzend: "",
-      gebueckt: false,
-      arme: false,
-      kniend: false,
-      geruest: false,
+      gebueckt: "",
+      arme: "",
+      kniend: "",
+      geruest: "",
       lastenArt: "",
       gewichtHaeufig: "",
       gewichtGelegentlich: "",
@@ -265,7 +268,9 @@
       reha4Jahr: "",
       reha4Regulaer: "",
       anamnese: "",
+      substanzen: {},
       schaedigungen: "",
+      entzugSymptome: {},
       abstinenz: "",
       aktuellAbstinent: "ja",
       abstinentSeit: "",
@@ -304,12 +309,58 @@
     },
   });
 
+  const HALTUNG = [
+    ["stehend", "stehend"],
+    ["gehend", "gehend"],
+    ["sitzend", "sitzend"],
+    ["gebueckt", "gebückt"],
+    ["arme", "Arme über Brusthöhe"],
+    ["kniend", "kniend / hockend"],
+    ["geruest", "auf Gerüsten / Leitern"],
+  ];
+
   let settings = loadJson(STORAGE_SETTINGS, defaultSettings());
   let cases = loadJson(STORAGE_CASES, []);
   let currentId = localStorage.getItem(STORAGE_CURRENT);
   let current = cases.find((c) => c.id === currentId) || cases[0] || null;
   let lastFocus = null;
   let statusTimer = null;
+
+  function mergeMissing(target, source) {
+    if (!target || typeof target !== "object" || Array.isArray(target)) return;
+    Object.keys(source).forEach((k) => {
+      const src = source[k];
+      if (src && typeof src === "object" && !Array.isArray(src)) {
+        if (target[k] == null || typeof target[k] !== "object" || Array.isArray(target[k])) target[k] = {};
+        mergeMissing(target[k], src);
+      } else if (target[k] === undefined) {
+        target[k] = src;
+      }
+    });
+  }
+  function migrateCase(c) {
+    if (!c) return;
+    const blank = emptyCase();
+    ["stammdaten", "g0100", "g0110", "g0450", "g0452"].forEach((k) => {
+      if (!c[k] || typeof c[k] !== "object") c[k] = blank[k];
+      else mergeMissing(c[k], blank[k]);
+    });
+    const n = c.g0110;
+    ["gebueckt", "arme", "kniend", "geruest"].forEach((k) => {
+      if (n[k] === true) n[k] = "zeitweise";
+      if (n[k] === false) n[k] = "";
+    });
+    let rows = Number(n.auRowCount) || 1;
+    for (let i = 4; i >= 1; i--) {
+      if (n["au" + i + "Zeit"] || n["au" + i + "Wegen"]) {
+        rows = Math.max(rows, i);
+        break;
+      }
+    }
+    n.auRowCount = Math.min(4, Math.max(1, rows));
+    if (!c.g0450.substanzen || typeof c.g0450.substanzen !== "object") c.g0450.substanzen = {};
+    if (!c.g0450.entzugSymptome || typeof c.g0450.entzugSymptome !== "object") c.g0450.entzugSymptome = {};
+  }
 
   function uid() {
     return "c-" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -464,7 +515,187 @@
     }
   }
 
+  function renderAuRows() {
+    const host = document.getElementById("au-periods");
+    if (!host) return;
+    const n = current.g0110;
+    let count = Number(n.auRowCount) || 1;
+    for (let i = 4; i >= 1; i--) {
+      if (n["au" + i + "Zeit"] || n["au" + i + "Wegen"]) {
+        count = Math.max(count, i);
+        break;
+      }
+    }
+    count = Math.min(4, Math.max(1, count));
+    n.auRowCount = count;
+    const rows = [];
+    for (let i = 1; i <= count; i++) {
+      const actions =
+        i === count
+          ? `<div class="au-actions">${
+              count < 4
+                ? `<button type="button" class="btn icon" data-au-add title="Zeitraum hinzufügen">+</button>`
+                : ""
+            }${
+              count > 1
+                ? `<button type="button" class="btn icon" data-au-remove title="Zeitraum entfernen">−</button>`
+                : ""
+            }</div>`
+          : `<div class="au-actions"></div>`;
+      rows.push(
+        `<div class="au-row">
+          <label class="field">Zeitraum ${i} (von – bis)<input type="text" data-bind="g0110.au${i}Zeit" placeholder="z. B. 01.01.2026 – 20.01.2026" /></label>
+          <label class="field">wegen<input type="text" data-bind="g0110.au${i}Wegen" /></label>
+          ${actions}
+        </div>`
+      );
+    }
+    host.innerHTML = rows.join("");
+  }
+
+  function renderHaltung() {
+    const host = document.getElementById("haltung-grid");
+    if (!host) return;
+    if (host.dataset.ready === "1") return;
+    const opts = ["ständig", "überwiegend", "zeitweise"];
+    host.innerHTML =
+      `<div></div><div class="h-head">ständig</div><div class="h-head">überwiegend</div><div class="h-head">zeitweise</div>` +
+      HALTUNG.map(([key, label]) => {
+        return (
+          `<div class="h-label">${escapeHtml(label)}</div>` +
+          opts
+            .map(
+              (o) =>
+                `<label><input type="radio" name="halt-${key}" value="${o}" data-bind="g0110.${key}" /></label>`
+            )
+            .join("")
+        );
+      }).join("");
+    host.dataset.ready = "1";
+  }
+
+  function renderSubstanzBuilder() {
+    const checks = document.getElementById("substanz-checks");
+    const details = document.getElementById("substanz-details");
+    if (!checks || !details) return;
+    const list = window.SDLZT_SUBSTANZEN || [];
+    if (checks.dataset.ready !== "1") {
+      checks.innerHTML = list
+        .map(
+          (s) =>
+            `<label><input type="checkbox" data-bind="g0450.substanzen.${s.id}.on" /> ${escapeHtml(s.label)}</label>`
+        )
+        .join("");
+      details.innerHTML = list
+        .map(
+          (s) =>
+            `<div class="substanz-card" data-substanz-panel="${s.id}" hidden>
+              <strong>${escapeHtml(s.label)}</strong>
+              <div class="grid cols-3">
+                <label class="field">Beginn des Konsums<input type="text" data-bind="g0450.substanzen.${s.id}.beginn" placeholder="Jahr oder Alter" /></label>
+                <label class="field">Aktuelle Dosis<input type="text" data-bind="g0450.substanzen.${s.id}.dosis" /></label>
+                <label class="field">Verlauf über die letzten Jahre<input type="text" data-bind="g0450.substanzen.${s.id}.verlauf" /></label>
+              </div>
+            </div>`
+        )
+        .join("");
+      checks.dataset.ready = "1";
+    }
+    updateSubstanzPanels();
+  }
+
+  function updateSubstanzPanels() {
+    const map = (current.g0450 && current.g0450.substanzen) || {};
+    document.querySelectorAll("[data-substanz-panel]").forEach((el) => {
+      const d = map[el.getAttribute("data-substanz-panel")];
+      el.hidden = !(d && d.on);
+    });
+  }
+
+  function renderEntzugBuilder() {
+    const host = document.getElementById("entzug-checks");
+    if (!host) return;
+    const list = window.SDLZT_ENTZUG || [];
+    if (host.dataset.ready !== "1") {
+      host.innerHTML = list
+        .map(
+          (s) =>
+            `<label><input type="checkbox" data-bind="g0450.entzugSymptome.${s.id}" /> ${escapeHtml(s.label)}</label>`
+        )
+        .join("");
+      host.dataset.ready = "1";
+    }
+  }
+
+  function updateEntzugChecks() {}
+
+  function substanzSatz() {
+    const p = anredeParts();
+    const list = window.SDLZT_SUBSTANZEN || [];
+    const parts = [];
+    list.forEach((s) => {
+      const d = (current.g0450.substanzen || {})[s.id];
+      if (!d || !d.on) return;
+      let line = s.label;
+      const bits = [];
+      if (d.beginn) bits.push("Beginn des Konsums: " + d.beginn);
+      if (d.dosis) bits.push("aktuelle Dosis: " + d.dosis);
+      if (d.verlauf) bits.push("Verlauf über die letzten Jahre: " + d.verlauf);
+      if (bits.length) line += ". " + bits.join(". ");
+      parts.push(line + ".");
+    });
+    if (!parts.length) return "";
+    return p.anrede + " berichtet über folgenden Substanzgebrauch:\n\n" + parts.join("\n");
+  }
+
+  function entzugSatz() {
+    const list = window.SDLZT_ENTZUG || [];
+    const sel = current.g0450.entzugSymptome || {};
+    const symptome = [];
+    const vorbekannt = [];
+    list.forEach((s) => {
+      if (!sel[s.id]) return;
+      if (s.kind === "vorbekannt") {
+        vorbekannt.push(s.id === "delirium" ? "Delirium" : "Krampfanfall");
+      } else {
+        symptome.push(s.label);
+      }
+    });
+    const chunks = [];
+    if (symptome.length === 1) {
+      chunks.push("Es bestehen folgende Entzugssymptome: " + symptome[0] + ".");
+    } else if (symptome.length > 1) {
+      const last = symptome.pop();
+      chunks.push("Es bestehen folgende Entzugssymptome: " + symptome.join(", ") + " und " + last + ".");
+    }
+    if (vorbekannt.length === 1) chunks.push(vorbekannt[0] + " ist vorbekannt.");
+    else if (vorbekannt.length > 1) chunks.push(vorbekannt.join(" und ") + " sind vorbekannt.");
+    return chunks.join(" ");
+  }
+
+  function insertGeneratedText(selector, text, replace) {
+    const ta = document.querySelector(selector);
+    if (!ta || !text) {
+      setStatus(text ? "Kein Zieltextfeld gefunden" : "Bitte zuerst Angaben auswählen", false);
+      return;
+    }
+    if (replace || !ta.value.trim()) {
+      ta.value = text;
+    } else {
+      const sep = ta.value.endsWith("\n") ? "" : "\n";
+      ta.value = ta.value + sep + text;
+    }
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    ta.classList.add("flash-target");
+    setTimeout(() => ta.classList.remove("flash-target"), 700);
+  }
+
   function bindAll() {
+    migrateCase(current);
+    renderAuRows();
+    renderHaltung();
+    renderSubstanzBuilder();
+    renderEntzugBuilder();
     document.querySelectorAll("[data-bind]").forEach((el) => {
       const path = el.getAttribute("data-bind");
       const from = el.getAttribute("data-from") || "case";
@@ -484,13 +715,9 @@
     document.querySelectorAll("[data-fill]").forEach((el) => {
       el.textContent = displayValue(el.getAttribute("data-fill"));
     });
-    const title = document.getElementById("case-title");
-    if (title) {
-      if (!current.titelCustom) {
-        const n = [current.stammdaten.nachname, current.stammdaten.vorname].filter(Boolean).join(", ");
-        if (n) current.titel = n;
-      }
-      title.value = current.titel || "";
+    if (!current.titelCustom) {
+      const n = [current.stammdaten.nachname, current.stammdaten.vorname].filter(Boolean).join(", ");
+      if (n) current.titel = n;
     }
     renderCaseList();
     renderPrint();
@@ -513,6 +740,8 @@
       diagnose: s.diagnose || diagnoseFromSucht(s),
       sucht: suchtLabels(s).join(", ") || "—",
       aufnahme: formatDate(s.aufnahmeDatum) || "—",
+      beruf: [s.erwerbstaetigkeit, s.berufsstellung].filter(Boolean).join(" · ") || "—",
+      arzt: [s.arztVorname, s.arztName].filter(Boolean).join(" ") || s.behandelnde || "—",
     };
     return map[key] ?? "";
   }
@@ -528,13 +757,6 @@
 
   function onInput(e) {
     const el = e.target;
-    if (el.id === "case-title") {
-      current.titel = el.value;
-      current.titelCustom = true;
-      saveAll();
-      renderCaseList();
-      return;
-    }
     if (!el.hasAttribute("data-bind")) return;
     const path = el.getAttribute("data-bind");
     const from = el.getAttribute("data-from") || "case";
@@ -560,12 +782,10 @@
     }
     if (path === "stammdaten.nachname" || path === "stammdaten.vorname") {
       const n = [current.stammdaten.nachname, current.stammdaten.vorname].filter(Boolean).join(", ");
-      if (!current.titelCustom) {
-        current.titel = n || "Neuer Antrag";
-        const title = document.getElementById("case-title");
-        if (title) title.value = current.titel;
-      }
+      if (!current.titelCustom) current.titel = n || "Neuer Antrag";
     }
+    if (path.startsWith("g0450.substanzen") && path.endsWith(".on")) updateSubstanzPanels();
+    if (path.startsWith("g0450.entzugSymptome")) updateEntzugChecks();
     if (path === "stammdaten.aufnahmeDatum") {
       const formatted = formatDate(current.stammdaten.aufnahmeDatum);
       const complete = /^\d{2}\.\d{2}\.\d{4}$/.test(formatted);
@@ -829,18 +1049,18 @@
         ${box("8–9 Krankenkasse / Arzt", `<div class="print-kv">${kv("Krankenkasse", s.kkName)}${kv("KK-Art", s.kkArt)}${kv("KK-Anschrift", [s.kkStrasse, s.kkPlz, s.kkOrt].filter(Boolean).join(", "))}${kv("Behandelnde/r Arzt/Ärztin", [s.arztName, s.arztVorname].filter(Boolean).join(", "))}${kv("Arzt-Anschrift", [s.arztStrasse, s.arztPlz, s.arztOrt].filter(Boolean).join(", "))}${kv("Arzt-Telefon", s.arztTelefon)}</div>`)}
       </section>
       <section class="print-page">${header("G0100", "Sozialversicherung und sonstige Angaben", "Seite 3")}
-        ${box("10–12", `<div class="print-kv">${kv("Beiträge DRV", a.beitragDRV)}${kv("Auslandsbeiträge", a.auslandsbeitrag)}${kv("aktuell Ausland", a.auslandsbeitragAktuell)}${kv("Jobcenter", a.jobcenter + (a.jobcenterName ? " · " + a.jobcenterName : ""))}${kv("Beamtenversorgung", a.beamter)}${kv("Rente / Antrag", a.rente)}${kv("RV-Träger", a.renteTraeger)}${kv("anerkannte Gesundheitsstörungen", a.gesundheitAnerkannt)}${kv("Regress / Unfall", a.regress)}${kv("Schadensersatz", a.schaden)}${kv("Reha letzte 4 Jahre", a.reha4Jahre)}${kv("Mutter-/Vater-Kind", a.mutterVater)}${kv("Vertretung", a.vertretung)}${kv("Kommunikationshilfe", a.kommunikation)}</div>`)}
+        ${box("10–12 Beiträge und sonstige Angaben", `<div class="print-kv">${kv("10.1 Beiträge DRV", a.beitragDRV)}${kv("10.2 Auslandsbeiträge", a.auslandsbeitrag)}${kv("Staat / vom / bis", [a.auslandStaat, a.auslandVom, a.auslandBis].filter(Boolean).join(" · "))}${kv("10.3 aktuell Ausland", a.auslandsbeitragAktuell)}${kv("11 Jobcenter", a.jobcenter + (a.jobcenterName ? " · " + a.jobcenterName : ""))}${kv("12.1 Beamtenversorgung", a.beamter)}${kv("12.2 Rente / Antrag", a.rente)}${kv("RV-Träger", a.renteTraeger)}${kv("12.4 anerkannte Gesundheitsstörungen", a.gesundheitAnerkannt)}${kv("Stelle / Aktenzeichen", [a.gesundheitStelle, a.gesundheitAktenz].filter(Boolean).join(" · "))}${kv("12.5 Regress / Unfall", a.regress)}${kv("Schadensersatz", a.schaden)}${kv("12.6 Reha letzte 4 Jahre", a.reha4Jahre)}${kv("Stelle zuletzt", a.rehaStelle)}${kv("Aktenzeichen", a.rehaAktenz)}${kv("vom / bis", [a.rehaVom, a.rehaBis].filter(Boolean).join(" – "))}${kv("12.7 Mutter-/Vater-Kind", a.mutterVater)}${kv("13 Vertretung", a.vertretung)}${kv("14 Kommunikationshilfe", a.kommunikation)}</div>`)}
         ${box("Unterschrift", `<div class="print-kv">${kv("Ort, Datum", a.ortDatum)}${kv("Unterschrift", a.unterschrift || name)}</div>`)}
       </section>`;
 
     document.getElementById("print-g0110").innerHTML = `
       <section class="print-page">${header("G0110", "Anlage zum Antrag auf Leistungen zur medizinischen Rehabilitation", "Seite 1")}
         ${box("Person", `<div class="print-kv">${kv("Name, Vorname", name)}${kv("Geburtsdatum", formatDate(s.geburtsdatum))}${kv("VSNR", s.vsnr)}</div>`)}
-        ${box("1 Arbeitsunfähigkeit und gesundheitliche Probleme", `<div class="print-kv">${kv("AU letzte 12 Monate", n.auDauer)}${kv("Zeiten / wegen", [n.au1Zeit, n.au1Wegen].filter(Boolean).join(" · "))}${kv("Probleme im Vordergrund", n.probleme)}${kv("andere Gesundheitsstörungen", n.andereStoerungen)}${kv("Schwerbehinderung", n.schwerbehinderung)}${kv("GdB / Merkzeichen", [n.gdb, n.merkzeichen].filter(Boolean).join(" / "))}</div>`)}
+        ${box("1 Arbeitsunfähigkeit und gesundheitliche Probleme", `<div class="print-kv">${kv("1.1 AU letzte 12 Monate", n.auDauer)}${kv("Zeitraum 1", [n.au1Zeit, n.au1Wegen].filter(Boolean).join(" · "))}${kv("Zeitraum 2", [n.au2Zeit, n.au2Wegen].filter(Boolean).join(" · "))}${kv("Zeitraum 3", [n.au3Zeit, n.au3Wegen].filter(Boolean).join(" · "))}${kv("Zeitraum 4", [n.au4Zeit, n.au4Wegen].filter(Boolean).join(" · "))}${kv("Probleme im Vordergrund", n.probleme)}${kv("1.2 andere Gesundheitsstörungen", n.andereStoerungen)}${kv("1.3 Schwerbehinderung", n.schwerbehinderung)}${kv("GdB / Merkzeichen", [n.gdb, n.merkzeichen].filter(Boolean).join(" / "))}</div>`)}
         ${box("2 Berufliche Zukunft", `<div>${[["im Beruf weiter", n.zukunftBerufJa], ["im Beruf nicht mehr", n.zukunftBerufNein], ["andere Arbeit", n.zukunftAndere], ["überhaupt nicht mehr", n.zukunftKeine]].filter((x) => x[1]).map((x) => "☐ " + x[0]).join("<br>") || "—"}</div>`)}
       </section>
       <section class="print-page">${header("G0110", "Arbeitsplatzbeschreibung", "Seite 2")}
-        ${box("3 Arbeitsplatz", `<div class="print-kv">${kv("Arbeitgeber", n.agName)}${kv("beschäftigt seit", n.beschSeit)}${kv("Mitarbeiter", n.mitarbeiter)}${kv("Tätigkeit", n.taetigkeit)}${kv("Std./Woche", n.stdWoche)}${kv("Einschränkungen", n.einschraenkungen)}</div><div class="keep">${escapeHtml(n.arbeitsplatzBem)}</div>`)}
+        ${box("3 Arbeitsplatz", `<div class="print-kv">${kv("Arbeitgeber", n.agName)}${kv("beschäftigt seit", n.beschSeit)}${kv("Mitarbeiter", n.mitarbeiter)}${kv("Tätigkeit", n.taetigkeit)}${kv("Arbeitshaltung", ["stehend " + (n.stehend || ""), "gehend " + (n.gehend || ""), "sitzend " + (n.sitzend || "")].join(" · "))}${kv("Std./Woche", n.stdWoche)}${kv("Äußere Einflüsse", [["Kälte", n.kaelte], ["Hitze", n.hitze], ["Staub", n.staub], ["Rauch", n.rauch], ["Lärm", n.laerm], ["Lärmschutz", n.laermschutz], ["Erschütterung", n.erschuetterung], ["Gerüche", n.gerueche], ["Hautreiz", n.hautreiz], ["Atemreiz", n.atemreiz], ["im Freien", n.freien], ["Rohbau", n.rohbau], ["witterungsgeschützt", n.witterung]].filter((x) => x[1]).map((x) => x[0]).join(", "))}${kv("Einschränkungen", n.einschraenkungen)}</div><div class="keep">${escapeHtml(n.arbeitsplatzBem)}</div>`)}
         ${box("4–6 Ärzte / Begutachtung / Betriebsarzt", `<div class="print-kv">${kv("Arzt 1", [n.arzt1, n.fach1, n.erk1].filter(Boolean).join(" · "))}${kv("Arzt 2", [n.arzt2, n.fach2, n.erk2].filter(Boolean).join(" · "))}${kv("Begutachtung", n.begutachtung)}${kv("Betriebsarzt", n.betriebsarzt)}${kv("Einwilligung Betrieb", n.einwillBetrieb)}</div>`)}
         ${box("Unterschrift", `<div class="print-kv">${kv("Ort, Datum", n.ortDatum)}${kv("Unterschrift", n.unterschrift || name)}</div>`)}
       </section>`;
@@ -914,6 +1134,36 @@
         const it = items.find((x) => x.id === b.dataset.baustein);
         if (it) insertBaustein(b, it.text, it.generate);
       }
+      if (e.target.closest("[data-au-add]")) {
+        const n = current.g0110;
+        n.auRowCount = Math.min(4, (Number(n.auRowCount) || 1) + 1);
+        bindAll();
+        return;
+      }
+      if (e.target.closest("[data-au-remove]")) {
+        const n = current.g0110;
+        const i = Number(n.auRowCount) || 1;
+        if (i > 1) {
+          n["au" + i + "Zeit"] = "";
+          n["au" + i + "Wegen"] = "";
+          n.auRowCount = i - 1;
+          bindAll();
+        }
+        return;
+      }
+      if (e.target.closest("#btn-substanz-satz")) {
+        insertGeneratedText('[data-bind="g0450.anamnese"]', substanzSatz());
+        return;
+      }
+      if (e.target.closest("#btn-entzug-toggle")) {
+        const panel = document.getElementById("entzug-panel");
+        if (panel) panel.classList.toggle("open");
+        return;
+      }
+      if (e.target.closest("#btn-entzug-satz")) {
+        insertGeneratedText('[data-bind="g0450.schaedigungen"]', entzugSatz());
+        return;
+      }
     });
     document.getElementById("btn-new").addEventListener("click", newCase);
     document.getElementById("btn-delete").addEventListener("click", deleteCurrent);
@@ -966,7 +1216,9 @@
       cases = [current];
       saveAll();
     } else {
+      cases.forEach(migrateCase);
       ensureCase();
+      migrateCase(current);
     }
     renderBausteine();
     initEvents();
