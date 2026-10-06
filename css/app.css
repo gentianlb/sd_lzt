@@ -157,8 +157,8 @@ a { color: var(--teal-dark); }
 .card h2 { font-size: 18px; }
 .card h3 { font-size: 15px; color: var(--teal-dark); }
 
-label.field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; }
-label.field span.help { font-weight: 400; color: var(--muted); font-size: 12px; }
+label.field, .field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; }
+label.field span.help, .field span.help { font-weight: 400; color: var(--muted); font-size: 12px; }
 input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], select, textarea {
   width: 100%;
   border: 1px solid #c9d2ce;
@@ -292,6 +292,92 @@ textarea.flash-target, input.flash-target {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px;
+}
+.dropdown-panel.open { display: block; }
+
+.diag-field { grid-column: 1 / -1; }
+.diag-toggle {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #c9d2ce;
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: #fff;
+  font-weight: 500;
+}
+.diag-toggle.open { border-color: var(--teal); background: #f4fbfb; }
+#diagnose-panel {
+  max-height: 460px;
+  overflow: auto;
+  padding: 0;
+}
+.diag-cat { border-bottom: 1px solid var(--line); }
+.diag-cat:last-child { border-bottom: 0; }
+.diag-cat-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  background: #fff;
+  border: 0;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.diag-cat-btn:hover { background: var(--teal-soft); }
+.diag-chevron {
+  display: inline-block;
+  width: 1em;
+  color: var(--teal);
+  transition: transform .15s ease;
+}
+.diag-cat.open .diag-chevron { transform: rotate(90deg); }
+.diag-cat-title { flex: 1; }
+.diag-cat-count {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--teal-dark);
+  background: var(--teal-soft);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.diag-cat-count:empty { display: none; }
+.diag-items { display: none; padding: 0 10px 10px 34px; }
+.diag-cat.open .diag-items { display: grid; gap: 4px; }
+.diag-items label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 4px 0;
+}
+.diag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.diag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--teal-soft);
+  color: var(--teal-dark);
+  border: 1px solid #c5e0e0;
+  border-radius: 999px;
+  padding: 4px 8px 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.diag-pill button {
+  border: 0;
+  background: transparent;
+  color: var(--teal-dark);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
 }
 .reveal { display: none; margin-top: 10px; }
 .reveal.open { display: block; }

@@ -69,6 +69,7 @@
       suchtSonstiges: false,
       suchtSonstigesText: "",
       diagnose: "",
+      diagnosen: [],
       leistungsform: "stationaer",
       nahtlos: false,
       adaption: false,
@@ -364,6 +365,7 @@
     n.auRowCount = Math.min(4, Math.max(1, rows));
     if (!c.g0450.substanzen || typeof c.g0450.substanzen !== "object") c.g0450.substanzen = {};
     if (!c.g0450.entzugSymptome || typeof c.g0450.entzugSymptome !== "object") c.g0450.entzugSymptome = {};
+    if (!Array.isArray(c.stammdaten.diagnosen)) c.stammdaten.diagnosen = [];
     if (
       c.g0450.letzteTaetigkeit &&
       c.g0450.letzteTaetigkeit !== (c.g0110.taetigkeit || "")
@@ -431,7 +433,7 @@
       pronomenCap: female ? "Sie" : diverse ? "Die Person" : "Er",
       poss: female ? "ihre" : diverse ? "deren" : "seine",
       aufnahme: formatDate(s.aufnahmeDatum) || "…",
-      diagnose: s.diagnose || diagnoseFromSucht(s),
+      diagnose: formatDiagnose(s),
       leistungsform: leistungsformLabel(s.leistungsform),
       leistungsformAdj: leistungsformAdj(s.leistungsform),
       antragArt: s.antragArt || "Erstantrag",
@@ -442,6 +444,41 @@
     };
   }
 
+  function f1Catalog() {
+    return window.SDLZT_F1 || [];
+  }
+  function f1ByCode(code) {
+    for (const cat of f1Catalog()) {
+      const item = cat.items.find((it) => it.code === code);
+      if (item) return item;
+    }
+    return null;
+  }
+  function selectedDiagnosen(s) {
+    const src = s || (current && current.stammdaten) || {};
+    return (Array.isArray(src.diagnosen) ? src.diagnosen : [])
+      .slice()
+      .sort((a, b) => String(a).localeCompare(String(b), "de", { numeric: true }));
+  }
+  function diagnoseLabels(s) {
+    return selectedDiagnosen(s)
+      .map((code) => {
+        const it = f1ByCode(code);
+        return it ? it.label : code;
+      })
+      .filter(Boolean);
+  }
+  function formatDiagnose(s) {
+    const labels = diagnoseLabels(s);
+    if (labels.length === 1) return labels[0];
+    if (labels.length > 1) return labels.slice(0, -1).join(", ") + " sowie " + labels[labels.length - 1];
+    return (s && s.diagnose) || diagnoseFromSucht(s);
+  }
+  function syncDiagnoseText() {
+    const s = current.stammdaten;
+    const labels = diagnoseLabels(s);
+    s.diagnose = labels.length ? formatDiagnose(s) : "";
+  }
   function diagnoseFromSucht(s) {
     const parts = [];
     if (s.suchtAlkohol) parts.push("Alkoholabhängigkeit");
@@ -507,8 +544,15 @@
     const extra = [];
     if (s.nahtlos) extra.push("Die Maßnahme soll im Nahtlosverfahren erfolgen.");
     if (s.adaption) extra.push("Im Anschluss sollte eine Adaption in Erwägung gezogen werden.");
+    const n = diagnoseLabels(s).length;
+    const intro =
+      n > 1
+        ? `Bei ${p.anrede} bestehen die behandlungsbedürftigen Diagnosen ${p.diagnose}, gegenüber denen ${p.pronomen} sich krankheitseinsichtig und veränderungsbereit zeigt.`
+        : n === 1
+          ? `Bei ${p.anrede} besteht die behandlungsbedürftige Diagnose ${p.diagnose}, gegenüber dieser ${p.pronomen} sich krankheitseinsichtig und veränderungsbereit zeigt.`
+          : `Bei ${p.anrede} besteht eine behandlungsbedürftige ${p.diagnose}, gegenüber dieser ${p.pronomen} sich krankheitseinsichtig und veränderungsbereit zeigt.`;
     return [
-      `Bei ${p.anrede} besteht eine behandlungsbedürftige ${p.diagnose}, gegenüber dieser ${p.pronomen} sich krankheitseinsichtig und veränderungsbereit zeigt. ${p.anrede} befindet sich seit dem ${p.aufnahme} in stationärer Behandlung zwecks ${p.behandlung}.`,
+      `${intro} ${p.anrede} befindet sich seit dem ${p.aufnahme} in stationärer Behandlung zwecks ${p.behandlung}.`,
       `Es handelt sich hierbei um einen ${p.antragArt} für eine ${p.leistungsformAdj} Leistung zur medizinischen Rehabilitation für Abhängigkeitserkrankte für ${p.anrede}. Die Indikation für eine medizinische Rehabilitation für Abhängigkeitskranke (siehe Arztbericht) besteht.`,
       extra.join(" "),
       `Die Motivation von ${p.anrede} wird als groß eingeschätzt.\nWir bitten um die Genehmigung der beantragten Maßnahme.`,
@@ -637,6 +681,73 @@
     }
   }
 
+  function renderDiagnosePicker() {
+    const host = document.getElementById("diagnose-tree");
+    if (!host) return;
+    if (host.dataset.ready !== "1") {
+      host.innerHTML = f1Catalog()
+        .map(
+          (cat) =>
+            `<div class="diag-cat" data-diag-group="${cat.code}">
+              <button type="button" class="diag-cat-btn" data-diag-cat="${cat.code}" aria-expanded="false">
+                <span class="diag-chevron">▸</span>
+                <span class="diag-cat-title">${escapeHtml(cat.code)} ${escapeHtml(cat.kurz)}</span>
+                <span class="diag-cat-count" data-diag-count="${cat.code}"></span>
+              </button>
+              <div class="diag-items">
+                ${cat.items
+                  .map(
+                    (it) =>
+                      `<label><input type="checkbox" data-diag-code="${it.code}" /> <span><strong>${escapeHtml(it.code)}</strong> ${escapeHtml(it.name)}</span></label>`
+                  )
+                  .join("")}
+              </div>
+            </div>`
+        )
+        .join("");
+      host.dataset.ready = "1";
+    }
+    updateDiagnoseUi();
+  }
+
+  function updateDiagnoseUi() {
+    const selected = selectedDiagnosen();
+    const set = new Set(selected);
+    document.querySelectorAll("[data-diag-code]").forEach((el) => {
+      el.checked = set.has(el.getAttribute("data-diag-code"));
+    });
+    f1Catalog().forEach((cat) => {
+      const n = cat.items.filter((it) => set.has(it.code)).length;
+      const badge = document.querySelector(`[data-diag-count="${cat.code}"]`);
+      if (badge) badge.textContent = n ? String(n) : "";
+    });
+    const btn = document.getElementById("btn-diagnose-toggle");
+    if (btn) {
+      btn.textContent = selected.length
+        ? selected.length + (selected.length === 1 ? " F1-Diagnose ausgewählt ▾" : " F1-Diagnosen ausgewählt ▾")
+        : "F1-Diagnosen auswählen ▾";
+    }
+    const pills = document.getElementById("diagnose-pills");
+    if (pills) {
+      pills.innerHTML = diagnoseLabels()
+        .map((label, i) => {
+          const code = selected[i];
+          return `<span class="diag-pill">${escapeHtml(label)} <button type="button" data-diag-remove="${escapeHtml(code)}" aria-label="Entfernen">×</button></span>`;
+        })
+        .join("");
+    }
+  }
+
+  function setDiagnoseChecked(code, on) {
+    const s = current.stammdaten;
+    if (!Array.isArray(s.diagnosen)) s.diagnosen = [];
+    const i = s.diagnosen.indexOf(code);
+    if (on && i < 0) s.diagnosen.push(code);
+    if (!on && i >= 0) s.diagnosen.splice(i, 1);
+    syncDiagnoseText();
+    updateDiagnoseUi();
+  }
+
   function updateEntzugChecks() {}
 
   function substanzSatz() {
@@ -707,6 +818,7 @@
     renderHaltung();
     renderSubstanzBuilder();
     renderEntzugBuilder();
+    renderDiagnosePicker();
     document.querySelectorAll("[data-bind]").forEach((el) => {
       const path = el.getAttribute("data-bind");
       const from = el.getAttribute("data-from") || "case";
@@ -749,7 +861,7 @@
       einrichtungAdresse: `${settings.strasse}, ${settings.plz} ${settings.ort}`,
       aufnehmend: `${settings.nameAufnehmend}, ${settings.berufAufnehmend}`,
       leistungsform: leistungsformLabel(s.leistungsform),
-      diagnose: s.diagnose || diagnoseFromSucht(s),
+      diagnose: formatDiagnose(s),
       sucht: suchtLabels(s).join(", ") || "—",
       aufnahme: formatDate(s.aufnahmeDatum) || "—",
       entlassung: formatDate(s.entlassungDatum) || "—",
@@ -770,6 +882,14 @@
 
   function onInput(e) {
     const el = e.target;
+    if (el.hasAttribute("data-diag-code")) {
+      setDiagnoseChecked(el.getAttribute("data-diag-code"), el.checked);
+      saveAll();
+      document.querySelectorAll("[data-fill]").forEach((n) => (n.textContent = displayValue(n.getAttribute("data-fill"))));
+      renderPrint();
+      updateDerivedHints();
+      return;
+    }
     if (!el.hasAttribute("data-bind")) return;
     const path = el.getAttribute("data-bind");
     const from = el.getAttribute("data-from") || "case";
@@ -1207,6 +1327,51 @@
         const panel = document.getElementById("entzug-panel");
         if (panel) panel.classList.toggle("open");
         return;
+      }
+      if (e.target.closest("#btn-diagnose-toggle")) {
+        const panel = document.getElementById("diagnose-panel");
+        const btn = document.getElementById("btn-diagnose-toggle");
+        if (panel) {
+          const open = !panel.classList.contains("open");
+          panel.classList.toggle("open", open);
+          if (btn) btn.classList.toggle("open", open);
+          if (open) {
+            const set = new Set(selectedDiagnosen());
+            document.querySelectorAll("[data-diag-group]").forEach((box) => {
+              const cat = f1Catalog().find((c) => c.code === box.getAttribute("data-diag-group"));
+              const has = !!(cat && cat.items.some((it) => set.has(it.code)));
+              box.classList.toggle("open", has);
+              const catBtn = box.querySelector("[data-diag-cat]");
+              if (catBtn) catBtn.setAttribute("aria-expanded", has ? "true" : "false");
+            });
+          }
+        }
+        return;
+      }
+      const catBtn = e.target.closest("[data-diag-cat]");
+      if (catBtn) {
+        const box = catBtn.closest(".diag-cat");
+        if (box) {
+          const open = !box.classList.contains("open");
+          box.classList.toggle("open", open);
+          catBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        }
+        return;
+      }
+      const remove = e.target.closest("[data-diag-remove]");
+      if (remove) {
+        setDiagnoseChecked(remove.getAttribute("data-diag-remove"), false);
+        saveAll();
+        document.querySelectorAll("[data-fill]").forEach((n) => (n.textContent = displayValue(n.getAttribute("data-fill"))));
+        renderPrint();
+        updateDerivedHints();
+        return;
+      }
+      if (!e.target.closest("#diagnose-panel")) {
+        const panel = document.getElementById("diagnose-panel");
+        const btn = document.getElementById("btn-diagnose-toggle");
+        if (panel) panel.classList.remove("open");
+        if (btn) btn.classList.remove("open");
       }
       if (e.target.closest("#btn-entzug-satz")) {
         insertGeneratedText('[data-bind="g0450.schaedigungen"]', entzugSatz());

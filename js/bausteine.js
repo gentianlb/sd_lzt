@@ -88,3 +88,45 @@ window.SDLZT_BAUSTEINE = {
 };
 
 window.SDLZT_STANDARD_ZIELE = `Psychische Stabilisierung und Erlangen von Abstinenzfähigkeit, psychotherapeutische Behandlung im Kontext der Abhängigkeitserkrankung, gesünder leben, stabile Abstinenz erreichen, Tagesstruktur aufbauen, Eigenfürsorge und Eigenverantwortung erlernen, Abgrenzungsfähigkeit entwickeln, neue Lebensinhalte entdecken und ein positives Lebensgefühl erlangen.`;
+
+window.SDLZT_F1 = (function () {
+  const kategorien = [
+    ["F10", "Alkohol", "Psychische und Verhaltensstörungen durch Alkohol"],
+    ["F11", "Opioide", "Psychische und Verhaltensstörungen durch Opioide"],
+    ["F12", "Cannabinoide", "Psychische und Verhaltensstörungen durch Cannabinoide"],
+    ["F13", "Sedativa / Hypnotika", "Psychische und Verhaltensstörungen durch Sedativa oder Hypnotika"],
+    ["F14", "Kokain", "Psychische und Verhaltensstörungen durch Kokain"],
+    ["F15", "andere Stimulanzien", "Psychische und Verhaltensstörungen durch andere Stimulanzien, einschließlich Koffein"],
+    ["F16", "Halluzinogene", "Psychische und Verhaltensstörungen durch Halluzinogene"],
+    ["F17", "Tabak", "Psychische und Verhaltensstörungen durch Tabak"],
+    ["F18", "flüchtige Lösungsmittel", "Psychische und Verhaltensstörungen durch flüchtige Lösungsmittel"],
+    ["F19", "multipler Substanzgebrauch", "Psychische und Verhaltensstörungen durch multiplen Substanzgebrauch und Konsum anderer psychotroper Substanzen"],
+  ];
+  const specifiers = [
+    ["0", "Akute Intoxikation"],
+    ["1", "Schädlicher Gebrauch"],
+    ["2", "Abhängigkeitssyndrom"],
+    ["3", "Entzugssyndrom"],
+    ["4", "Entzugssyndrom mit Delir"],
+    ["5", "Psychotische Störung"],
+    ["6", "Amnesiesyndrom"],
+    ["7", "Restzustand und verzögert auftretende psychotische Störung"],
+    ["8", "Sonstige psychische und Verhaltensstörungen"],
+    ["9", "Nicht näher bezeichnete psychische und Verhaltensstörung"],
+  ];
+  return kategorien.map(([code, kurz, full]) => ({
+    code,
+    kurz,
+    full,
+    title: code + " " + kurz,
+    items: specifiers.map(([n, name]) => {
+      const icd = code + "." + n;
+      return {
+        code: icd,
+        name,
+        kurz,
+        label: icd + " " + name + " (" + kurz + ")",
+      };
+    }),
+  }));
+})();
