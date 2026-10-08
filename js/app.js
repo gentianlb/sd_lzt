@@ -1431,7 +1431,9 @@
     });
     document.getElementById("btn-save").addEventListener("click", () => {
       saveAll();
-      setStatus("Lokal gespeichert", true);
+      setStatus(persistenceUnavailable
+        ? "Browser-Speicherung nicht verfügbar: bitte JSON sichern"
+        : "Lokal gespeichert", !persistenceUnavailable);
     });
     document.querySelectorAll("[data-generate]").forEach((btn) => {
       btn.addEventListener("click", () => {
