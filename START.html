@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SD_LZT Offline · Antrag auf Therapieleistung</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <strong>Therapieantrag Sucht</strong>
+      </div>
+      <div class="case-meta">
+        <span class="status" data-status></span>
+      </div>
+      <div class="top-actions">
+        <button class="btn ghost" id="btn-save" type="button">Speichern</button>
+        <button class="btn ghost" id="btn-export" type="button">JSON exportieren</button>
+        <label class="btn ghost">JSON importieren<input id="btn-import" type="file" accept="application/json" hidden /></label>
+        <button class="btn primary" data-pdf="all" type="button">Originalformulare ausfüllen</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="nav-label">Antrag</div>
+      <button class="nav-btn active" data-view="start" type="button"><b>Start</b><small>Überblick</small></button>
+      <button class="nav-btn" data-view="stammdaten" type="button"><b>Stammdaten</b><small>einmalig · füllt alle G-Formulare</small></button>
+      <button class="nav-btn" data-view="g0100" type="button"><b>G0100 Rehabilitationsantrag</b><small>ambulant / tagesklinisch / stationär</small></button>
+      <button class="nav-btn" data-view="g0110" type="button"><b>G0110 Anlage</b><small>AU, Gesundheit, Arbeitsplatz</small></button>
+      <button class="nav-btn" data-view="g0450" type="button"><b>G0450 Sozialbericht</b><small>Psychosoziale Grunddaten</small></button>
+      <button class="nav-btn" data-view="g0452" type="button"><b>G0452 Einwilligung</b><small>Anlage zum Sozialbericht</small></button>
+      <button class="nav-btn" data-view="druck" type="button"><b>Originalformulare</b><small>DRV-Formblätter ausfüllen</small></button>
+      <button class="nav-btn" data-view="settings" type="button"><b>Einrichtung</b><small>Sozialdienst / Klinik</small></button>
+
+      <div class="nav-label">Gespeicherte Fälle</div>
+      <div class="case-list" id="case-list"></div>
+      <div style="padding:10px 8px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn small" id="btn-new" type="button">Neuer Antrag</button>
+        <button class="btn small danger" id="btn-delete" type="button">Fall löschen</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="view active" id="view-start">
+        <div class="page-head">
+          <h1>Antrag auf Therapieleistung</h1>
+        </div>
+        <div class="hint" id="hint-shared">Noch kein Name erfasst.</div>
+        <div class="hint" style="margin:12px 0;padding:16px;border-left:4px solid #0b6e75;">
+          <strong>Offline-Version – kein Server, keine Internetverbindung erforderlich.</strong>
+          <p>Die PDF-Vorlagen sind im Programm enthalten. Deine ausgefüllten PDFs werden über den Download-Dialog gespeichert.
+          Die automatische Speicherung im Browser ist bei lokalen HTML-Dateien je nach Browser eingeschränkt. Bitte regelmäßig eine
+          Gesamtsicherung als JSON exportieren und an einem freigegebenen, geschützten Ort speichern.</p>
+          <button class="btn primary" id="btn-export-all" type="button">Alle Fälle als JSON sichern</button>
+        </div>
+        <div class="overview single">
+          <div class="ov-card">
+            <h3>Aktueller Fall</h3>
+            <dl>
+              <dt>Name</dt><dd data-fill="name"></dd>
+              <dt>Geburtsdatum</dt><dd data-fill="geburtsdatum"></dd>
+              <dt>VSNR</dt><dd data-fill="vsnr"></dd>
+              <dt>Krankenkasse</dt><dd data-fill="kk"></dd>
+              <dt>Leistungsform</dt><dd data-fill="leistungsform"></dd>
+              <dt>Suchtform</dt><dd data-fill="sucht"></dd>
+            </dl>
+            <div class="toolbar" style="margin-top:12px;">
+              <button class="btn" data-go="stammdaten" type="button">Stammdaten öffnen</button>
+              <button class="btn" data-go="g0450" type="button">Sozialbericht schreiben</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-stammdaten">
+        <div class="page-head">
+          <h1>Stammdaten <span class="shared-pill">wird in alle G-Unterlagen übernommen</span></h1>
+          <p>Diese Felder speisen den Rehabilitationsantrag, die Anlage, den Sozialbericht und die Einwilligung. Änderungen hier aktualisieren die übrigen Formulare sofort.</p>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Beantragte Therapie</h2>
+          <div class="grid cols-2">
+            <label class="field">Leistungsform
+              <select data-bind="stammdaten.leistungsform">
+                <option value="stationaer">stationär</option>
+                <option value="tagesklinisch">tagesklinisch / ganztägig ambulant</option>
+                <option value="ambulant">ambulant</option>
+                <option value="kombination">Kombinationsbehandlung</option>
+              </select>
+            </label>
+            <label class="field">Antragsart
+              <select data-bind="stammdaten.antragArt">
+                <option>Erstantrag</option>
+                <option>Wiederholungsantrag</option>
+                <option>Weiterführungsantrag</option>
+              </select>
+            </label>
+            <div class="field diag-field">
+              <span>Diagnose (kurz, für Zusammenfassung)</span>
+              <p class="help-block">Mehrere ICD-10-F1-Diagnosen auswählen. Die Oberkategorien F10–F19 lassen sich aufklappen.</p>
+              <button class="diag-toggle" type="button" id="btn-diagnose-toggle">F1-Diagnosen auswählen ▾</button>
+              <div class="diag-pills" id="diagnose-pills"></div>
+              <div class="dropdown-panel" id="diagnose-panel">
+                <div id="diagnose-tree"></div>
+              </div>
+            </div>
+            <div>
+              <span class="help" style="font-size:13px;font-weight:600;">Zusätze</span>
+              <div class="checkrow">
+                <label><input type="checkbox" data-bind="stammdaten.nahtlos" /> Nahtlosverfahren</label>
+                <label><input type="checkbox" data-bind="stammdaten.adaption" /> Adaption im Anschluss</label>
+              </div>
+            </div>
+          </div>
+          <h3>Suchtform</h3>
+          <div class="checkrow">
+            <label><input type="checkbox" data-bind="stammdaten.suchtAlkohol" /> Alkohol</label>
+            <label><input type="checkbox" data-bind="stammdaten.suchtMedikamente" /> Medikamente</label>
+            <label><input type="checkbox" data-bind="stammdaten.suchtDrogen" /> Drogen</label>
+            <label><input type="checkbox" data-bind="stammdaten.suchtNichtStoff" /> nicht stoffgebunden</label>
+            <label><input type="checkbox" data-bind="stammdaten.suchtSonstiges" /> Sonstiges</label>
+          </div>
+          <label class="field" style="margin-top:8px;">Sonstiges (z. B. drogeninduzierte Psychose)
+            <input type="text" data-bind="stammdaten.suchtSonstigesText" />
+          </label>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Person</h2>
+          <div class="grid cols-3">
+            <label class="field">Nachname<input type="text" data-bind="stammdaten.nachname" /></label>
+            <label class="field">Vorname<input type="text" data-bind="stammdaten.vorname" /></label>
+            <label class="field">Geburtsname<input type="text" data-bind="stammdaten.geburtsname" /></label>
+            <label class="field">Geburtsdatum<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.geburtsdatum" placeholder="z. B. 12.04.1975" /></label>
+            <label class="field">Geschlecht
+              <select data-bind="stammdaten.geschlecht">
+                <option value="">bitte wählen</option>
+                <option value="weiblich">weiblich</option>
+                <option value="maennlich">männlich</option>
+                <option value="divers">divers</option>
+                <option value="ohne">ohne Eintrag</option>
+              </select>
+            </label>
+            <label class="field">Familienstand
+              <select data-bind="stammdaten.familienstand">
+                <option value=""></option>
+                <option value="ledig">ledig</option>
+                <option value="verheiratet">verheiratet</option>
+                <option value="geschieden">geschieden</option>
+                <option value="verwitwet">verwitwet</option>
+              </select>
+            </label>
+            <label class="field">Geburtsort<input type="text" data-bind="stammdaten.geburtsort" /></label>
+            <label class="field">Geburtsland<input type="text" data-bind="stammdaten.geburtsland" /></label>
+            <label class="field">Staatsangehörigkeit<input type="text" data-bind="stammdaten.staatsangehoerigkeit" /></label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Anschrift und Kontakt</h2>
+          <div class="grid cols-3">
+            <label class="field">Straße, Hausnummer<input type="text" data-bind="stammdaten.strasse" /></label>
+            <label class="field">Adresszusatz<input type="text" data-bind="stammdaten.adresszusatz" /></label>
+            <label class="field">Land<input type="text" data-bind="stammdaten.land" /></label>
+            <label class="field">PLZ<input type="text" data-bind="stammdaten.plz" /></label>
+            <label class="field">Wohnort<input type="text" data-bind="stammdaten.ort" /></label>
+            <label class="field">Telefon<input type="tel" data-bind="stammdaten.telefon" /></label>
+            <label class="field">Telefax<input type="tel" data-bind="stammdaten.telefax" /></label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Versicherung</h2>
+          <div class="grid cols-3">
+            <label class="field">Rentenversicherungsnummer<input type="text" data-bind="stammdaten.vsnr" placeholder="12-stellig" /></label>
+            <label class="field">Kennzeichen<input type="text" data-bind="stammdaten.kennzeichen" /></label>
+            <label class="field">MSAT / MSNR<input type="text" data-bind="stammdaten.msatMsnr" /></label>
+            <label class="field">Name der Krankenkasse<input type="text" data-bind="stammdaten.kkName" /></label>
+            <label class="field">Versicherten-Nr. der Krankenkasse<input type="text" data-bind="stammdaten.kkVsnr" /></label>
+            <label class="field">Art
+              <select data-bind="stammdaten.kkArt">
+                <option value="gesetzlich">Gesetzliche Krankenkasse</option>
+                <option value="privat">Private Krankenversicherung</option>
+              </select>
+            </label>
+            <label class="field">KK Straße<input type="text" data-bind="stammdaten.kkStrasse" /></label>
+            <label class="field">KK PLZ<input type="text" data-bind="stammdaten.kkPlz" /></label>
+            <label class="field">KK Ort<input type="text" data-bind="stammdaten.kkOrt" /></label>
+            <label class="field">KK Telefon<input type="tel" data-bind="stammdaten.kkTelefon" /></label>
+            <label class="field">Institutionskennzeichen KK<input type="text" data-bind="stammdaten.kkIk" /></label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Aktueller Aufenthalt</h2>
+          <p class="help-block">Aufnahme und voraussichtliche Entlassung der aktuellen Behandlung. Der Aufenthaltsort erscheint im Sozialbericht, falls er von der Wohnanschrift abweicht.</p>
+          <div class="grid cols-3">
+            <label class="field">Aufnahme<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.aufnahmeDatum" placeholder="z. B. 18.03.2026" /></label>
+            <label class="field">voraussichtliche Entlassung<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="stammdaten.entlassungDatum" placeholder="z. B. 08.04.2026" /></label>
+            <label class="field">derzeitiger Aufenthaltsort (falls abweichend)<input type="text" data-bind="stammdaten.aufenthaltsort" /></label>
+            <label class="field">Niederlassung / Aufenthalt
+              <span class="checkrow"><label><input type="checkbox" data-bind="stammdaten.aufenthaltserlaubnis" /> Erlaubnis liegt vor, Kopie beigefügt</label></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>Behandelnde Ärztin / behandelnder Arzt</h2>
+          <p class="help-block">Entspricht Punkt 9 des Rehabilitationsantrags G0100. Hier die Ärztin oder den Arzt angeben, die oder der die Patientin / den Patienten regelmäßig behandelt – in der Regel die Hausärztin / der Hausarzt, nicht die Klinik der aktuellen Entgiftung.</p>
+          <div class="grid cols-3">
+            <label class="field">Name<input type="text" data-bind="stammdaten.arztName" /></label>
+            <label class="field">Vorname<input type="text" data-bind="stammdaten.arztVorname" /></label>
+            <label class="field">Telefon<input type="tel" data-bind="stammdaten.arztTelefon" /></label>
+            <label class="field">Straße, Hausnummer<input type="text" data-bind="stammdaten.arztStrasse" /></label>
+            <label class="field">PLZ<input type="text" data-bind="stammdaten.arztPlz" /></label>
+            <label class="field">Ort<input type="text" data-bind="stammdaten.arztOrt" /></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Beruf (wird in G0100 / G0110 / G0450 übernommen)</h2>
+          <div class="grid cols-2">
+            <label class="field">zuletzt ausgeübte Erwerbstätigkeit / Beruf
+              <input type="text" data-bind="stammdaten.erwerbstaetigkeit" />
+            </label>
+            <label class="field">Stellung im Beruf
+              <select data-bind="stammdaten.berufsstellung">
+                <option value=""></option>
+                <option value="nicht erwerbstätig">nicht erwerbstätig</option>
+                <option value="Auszubildender">Auszubildender</option>
+                <option value="ungelernter Arbeiter">ungelernter Arbeiter</option>
+                <option value="angelernter Arbeiter">angelernter Arbeiter</option>
+                <option value="Facharbeiter">Facharbeiter</option>
+                <option value="Meister, Polier">Meister, Polier</option>
+                <option value="Angestellter">Angestellter</option>
+                <option value="Beamter / DO-Angestellter">Beamter / DO-Angestellter</option>
+                <option value="Selbständiger">Selbständiger</option>
+              </select>
+            </label>
+            <label class="field">Arbeit vor Antragstellung / AU
+              <select data-bind="stammdaten.arbeitVorAntrag">
+                <option value=""></option>
+                <option value="nicht erwerbstätig">nicht erwerbstätig</option>
+                <option value="Ganztags ohne Wechselschicht/Akkord/Nacht">Ganztags ohne Wechselschicht/Akkord/Nacht</option>
+                <option value="Ganztags mit Wechselschicht/Akkord">Ganztags mit Wechselschicht/Akkord</option>
+                <option value="Ganztags mit Nachtschicht">Ganztags mit Nachtschicht</option>
+                <option value="Teilzeit &lt; Hälfte">Teilzeit, weniger als die Hälfte</option>
+                <option value="Teilzeit ≥ Hälfte">Teilzeit, mindestens die Hälfte</option>
+                <option value="Hausfrau / Hausmann">ausschließlich Hausfrau / Hausmann</option>
+                <option value="arbeitslos gemeldet">arbeitslos gemeldet</option>
+                <option value="Heimarbeit">Heimarbeit</option>
+                <option value="WfbM">Beschäftigung in einer WfbM</option>
+              </select>
+            </label>
+            <label class="field">wenn arbeitslos, seit wann?<input type="text" data-bind="stammdaten.arbeitslosSeit" placeholder="z. B. 02/2026" /></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-g0100">
+        <div class="page-head">
+          <h1>G0100 Rehabilitationsantrag</h1>
+          <p>Name, Anschrift, Versicherung und Leistungsform kommen aus den Stammdaten. Hier nur die antragsspezifischen Kreuze und Wunschkliniken ergänzen.</p>
+        </div>
+        <div class="hint"><span data-fill="name"></span> · VSNR <span data-fill="vsnr"></span> · <span data-fill="leistungsform"></span></div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>1 Beantragte Leistung</h2>
+          <p>Hat Krankenkasse, Agentur für Arbeit oder Jobcenter schriftlich zur Antragstellung aufgefordert?</p>
+          <div class="radios">
+            <label><input type="radio" name="aufforderung" value="nein" data-bind="g0100.aufforderung" /> nein</label>
+            <label><input type="radio" name="aufforderung" value="Krankenkasse" data-bind="g0100.aufforderung" /> ja, die Krankenkasse</label>
+            <label><input type="radio" name="aufforderung" value="Agentur für Arbeit" data-bind="g0100.aufforderung" /> ja, die Agentur für Arbeit</label>
+            <label><input type="radio" name="aufforderung" value="Jobcenter" data-bind="g0100.aufforderung" /> ja, das Jobcenter</label>
+          </div>
+          <div class="checkrow" style="margin-top:12px;">
+            <label><input type="checkbox" data-bind="g0100.leistungAbhaengig" /> Leistungen zur medizinischen Rehabilitation bei Abhängigkeitserkrankungen</label>
+            <label><input type="checkbox" data-bind="g0100.leistungMedReha" /> Leistungen zur medizinischen Rehabilitation (allgemein)</label>
+          </div>
+          <label class="field">falls allgemeine med. Reha: Form
+            <select data-bind="g0100.leistungMedRehaForm">
+              <option value=""></option>
+              <option>stationär</option>
+              <option>ganztägig ambulant</option>
+            </select>
+          </label>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>2 Mitnahme einer pflegebedürftigen Person</h2>
+          <p>Nur bei stationärer medizinischer Rehabilitation. Ist die Mitnahme erforderlich?</p>
+          <div class="radios">
+            <label><input type="radio" name="mitnahme" value="nein" data-bind="g0100.mitnahmePflege" /> nein</label>
+            <label><input type="radio" name="mitnahme" value="ja, G0111 beifügen" data-bind="g0100.mitnahmePflege" /> ja, Formular G0111 beifügen</label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>3 Wunsch- und Wahlrecht bei medizinischer Rehabilitation</h2>
+          <p>Angaben freiwillig. Bis zu drei Einrichtungen in Rangfolge.</p>
+          <div class="grid cols-1">
+            <label class="field">3.1 1. Wunschklinik (Name und Adresse)<textarea data-bind="g0100.wunsch1"></textarea></label>
+            <label class="field">3.2 2. Wunschklinik<textarea data-bind="g0100.wunsch2"></textarea></label>
+            <label class="field">3.3 3. Wunschklinik<textarea data-bind="g0100.wunsch3"></textarea></label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>4–9 Person, Beruf, Krankenkasse, Arzt</h2>
+          <p>Diese Punkte stehen im Originalformular und werden aus den <button class="btn small" type="button" data-go="stammdaten">Stammdaten</button> übernommen.</p>
+          <div class="print-kv preview-kv">
+            <div>4 Person</div><div><span data-fill="name"></span>, geb. <span data-fill="geburtsdatum"></span></div>
+            <div>5–7 Beruf</div><div><span data-fill="beruf"></span></div>
+            <div>8 Krankenkasse</div><div><span data-fill="kk"></span></div>
+            <div>9 Behandelnde Ärztin / Arzt</div><div><span data-fill="arzt"></span></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>10 Beiträge zur Sozialversicherung</h2>
+          <h3 class="sub">10.1 Beiträge zur Deutschen Rentenversicherung</h3>
+          <label class="field">Haben Sie Beiträge zur Deutschen Rentenversicherung gezahlt?
+            <select data-bind="g0100.beitragDRV"><option>ja</option><option>nein</option></select>
+          </label>
+          <h3 class="sub">10.2 Beiträge zur Sozialversicherung im Ausland</h3>
+          <div class="grid cols-3">
+            <label class="field">Beiträge im Ausland gezahlt?
+              <select data-bind="g0100.auslandsbeitrag"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Staat<input type="text" data-bind="g0100.auslandStaat" /></label>
+            <label class="field">vom<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="g0100.auslandVom" /></label>
+            <label class="field">bis<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="g0100.auslandBis" /></label>
+          </div>
+          <h3 class="sub">10.3 Aktuell Beiträge im Ausland</h3>
+          <label class="field">Zahlen Sie aktuell Beiträge zur Sozialversicherung im Ausland?
+            <select data-bind="g0100.auslandsbeitragAktuell"><option>nein</option><option>ja</option></select>
+          </label>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>11 Leistungen des Jobcenters</h2>
+          <div class="grid cols-2">
+            <label class="field">Beziehen oder bezogen Sie zuletzt Leistungen des Jobcenters oder haben Sie Leistungen beantragt?
+              <select data-bind="g0100.jobcenter"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Name des Jobcenters, Aktenzeichen<input type="text" data-bind="g0100.jobcenterName" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>12 Sonstige Angaben</h2>
+          <h3 class="sub">12.1 Beamtenversorgung / Versicherungsfreiheit</h3>
+          <label class="field">Beschäftigung mit Anwartschaft auf Versorgung oder Versicherungsfreiheit durch Altersversorgung?
+            <select data-bind="g0100.beamter"><option>nein</option><option>ja</option></select>
+          </label>
+          <h3 class="sub">12.2 Rentenleistungen aus der gesetzlichen Rentenversicherung</h3>
+          <div class="grid cols-2">
+            <label class="field">Rente beziehen oder entsprechenden Antrag gestellt?
+              <select data-bind="g0100.rente"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Name des Rentenversicherungsträgers<input type="text" data-bind="g0100.renteTraeger" /></label>
+          </div>
+          <h3 class="sub">12.3 Leistungen bis zum Beginn einer Altersrente</h3>
+          <div class="grid cols-2">
+            <label class="field">Leistung, die regelmäßig bis zum Beginn einer Altersrente gezahlt wird?
+              <select data-bind="g0100.leistungBisAltersrente"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Art der Leistung<input type="text" data-bind="g0100.leistungArt" /></label>
+          </div>
+          <h3 class="sub">12.4 Anerkannte Gesundheitsstörungen</h3>
+          <p class="help-block">Arbeitsunfall, Berufskrankheit, Wehr-/Zivildienst, Auslandseinsatz, Gewalttat, Verfolgtenleiden, Impfschaden.</p>
+          <div class="grid cols-2">
+            <label class="field">Gesundheitsstörungen anerkannt?
+              <select data-bind="g0100.gesundheitAnerkannt"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Von welcher Stelle?<input type="text" data-bind="g0100.gesundheitStelle" /></label>
+            <label class="field">Aktenzeichen<input type="text" data-bind="g0100.gesundheitAktenz" /></label>
+            <label class="field">Welche Gesundheitsstörungen?<textarea data-bind="g0100.gesundheitStoerung"></textarea></label>
+            <label class="field">Aktuell entsprechenden Antrag gestellt?
+              <select data-bind="g0100.gesundheitAntrag"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Bei welcher Stelle?<input type="text" data-bind="g0100.gesundheitAntragStelle" /></label>
+          </div>
+          <h3 class="sub">12.5 Unfall / Schadensersatz</h3>
+          <div class="grid cols-2">
+            <label class="field">Erwerbsfähigkeit durch Unfall oder andere Personen gemindert?
+              <select data-bind="g0100.regress"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Schadensersatzansprüche geltend gemacht?
+              <select data-bind="g0100.schaden"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">am<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="g0100.schadenAm" /></label>
+            <label class="field">Bei welcher Stelle?<input type="text" data-bind="g0100.schadenStelle" /></label>
+            <label class="field">Aktenzeichen<input type="text" data-bind="g0100.schadenAktenz" /></label>
+          </div>
+          <h3 class="sub">12.6 Medizinische Rehabilitation in den letzten 4 Jahren</h3>
+          <p class="help-block">Auch anderer Rehabilitationsträger, zum Beispiel Krankenkasse, Versorgungsamt, Unfallversicherungsträger.</p>
+          <label class="field">Leistungen zur medizinischen Rehabilitation erhalten?
+            <select data-bind="g0100.reha4Jahre"><option>nein</option><option>ja</option></select>
+          </label>
+          <div class="grid cols-2">
+            <label class="field">Von welcher Stelle zuletzt?<input type="text" data-bind="g0100.rehaStelle" /></label>
+            <label class="field">Aktenzeichen<input type="text" data-bind="g0100.rehaAktenz" /></label>
+            <label class="field">vom<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="g0100.rehaVom" /></label>
+            <label class="field">bis<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="g0100.rehaBis" /></label>
+          </div>
+          <h3 class="sub">12.7 Mutter-Kind- / Vater-Kind-Leistungen</h3>
+          <div class="grid cols-2">
+            <label class="field">Unmittelbar zuvor Antrag oder Verordnung bei der Krankenkasse?
+              <select data-bind="g0100.mutterVater"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">am<span class="help">TT.MM.JJJJ</span><input type="text" data-date data-bind="g0100.mutterVaterAm" /></label>
+            <label class="field">Name der Krankenkasse<input type="text" data-bind="g0100.mutterVaterKk" /></label>
+            <label class="field">Aktenzeichen<input type="text" data-bind="g0100.mutterVaterAktenz" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>13 Antragstellung durch andere Personen</h2>
+          <div class="grid cols-2">
+            <label class="field">Wird der Antrag durch andere Personen gestellt?
+              <select data-bind="g0100.vertretung"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">in der Eigenschaft als
+              <select data-bind="g0100.vertretungArt">
+                <option value=""></option>
+                <option>gesetzlicher Vertreter</option>
+                <option>Vormund</option>
+                <option>Betreuer</option>
+                <option>Bevollmächtigter</option>
+              </select>
+            </label>
+            <label class="field">Name, Vorname / Dienststelle<input type="text" data-bind="g0100.vertretungName" /></label>
+            <label class="field">Straße, Hausnummer<input type="text" data-bind="g0100.vertretungStrasse" /></label>
+            <label class="field">Postleitzahl<input type="text" data-bind="g0100.vertretungPlz" /></label>
+            <label class="field">Wohnort<input type="text" data-bind="g0100.vertretungOrt" /></label>
+            <label class="field">Telefon<input type="tel" data-bind="g0100.vertretungTelefon" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>14 Kommunikationshilfen und anerkannte Hilfsmittel</h2>
+          <div class="grid cols-2">
+            <label class="field">Gebärdensprachdolmetscher, Kommunikationshilfe oder anerkanntes Hilfsmittel?
+              <select data-bind="g0100.kommunikation"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Falls ja, ich bin angewiesen auf<input type="text" data-bind="g0100.kommunikationHilfe" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>15 Dokumentenzugang für sehbehinderte Menschen</h2>
+          <div class="checkrow">
+            <label><input type="checkbox" data-bind="g0100.dokuGrossdruck" /> als Großdruck</label>
+            <label><input type="checkbox" data-bind="g0100.dokuKurzschrift" /> in Braille (Kurzschrift)</label>
+            <label><input type="checkbox" data-bind="g0100.dokuVollschrift" /> in Braille (Vollschrift)</label>
+            <label><input type="checkbox" data-bind="g0100.dokuCd" /> als CD</label>
+            <label><input type="checkbox" data-bind="g0100.dokuDaisy" /> als Hörmedium (CD-DAISY)</label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>17 Unterschrift</h2>
+          <p class="help-block">Finale Unterschrift der antragstellenden Person. Die Einwilligung unter 16.1 bleibt auf dem Originalformular frei.</p>
+          <label class="field">Ort, Datum
+            <input type="text" data-bind="g0100.ortDatum" />
+          </label>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0100.ortDatum"]'>Ort und Datum einfügen</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>18 Angabe der gesetzlichen Krankenkasse</h2>
+          <p class="help-block">Sofern die Antragstellung auf Leistungen zur Teilhabe über die Krankenkasse erfolgt, benötigen wir das Institutionskennzeichen der Krankenkasse. Diese Angaben werden nicht automatisch übernommen.</p>
+          <div class="checkrow" style="margin-bottom:12px;">
+            <label><input type="checkbox" data-bind="g0100.kkUebernehmen" /> Angaben aus den Stammdaten übernehmen</label>
+          </div>
+          <div class="grid cols-2">
+            <label class="field">Name der Krankenkasse<input type="text" data-bind="g0100.kkName18" /></label>
+            <label class="field">Institutionskennzeichen<input type="text" data-bind="g0100.kkIk" /></label>
+          </div>
+          <div class="toolbar" style="margin-top:12px;">
+            <button class="btn primary" type="button" data-pdf="G0100">G0100-Original ausfüllen</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-g0110">
+        <div class="page-head">
+          <h1>G0110 Anlage zum Rehabilitationsantrag</h1>
+          <p>Personendaten kommen aus den Stammdaten. Bitte G0110 beifügen, sofern keine Altersrente bezogen wird.</p>
+        </div>
+        <div class="hint"><span data-fill="name"></span> · geb. <span data-fill="geburtsdatum"></span></div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>1 Arbeitsunfähigkeit und gesundheitliche Probleme</h2>
+          <h3 class="sub">1.1 Arbeitsunfähigkeit in den letzten 12 Monaten</h3>
+          <label class="field">Wie lange waren Sie in den letzten 12 Monaten arbeitsunfähig?
+            <select data-bind="g0110.auDauer">
+              <option value=""></option>
+              <option>gar nicht</option>
+              <option>bis 6 Wochen</option>
+              <option>bis 3 Monate</option>
+              <option>bis 6 Monate</option>
+              <option>mehr als 6 Monate</option>
+            </select>
+          </label>
+          <p class="help-block">Zeiträume (von – bis) und Ursache. Ein Zeitraum ist vorgegeben; weitere per Pluszeichen, höchstens vier wie im Formular.</p>
+          <div id="au-periods"></div>
+          <label class="field">Welche gesundheitlichen Probleme stehen derzeit im Vordergrund?
+            <textarea class="wide" data-bind="g0110.probleme"></textarea>
+          </label>
+          <h3 class="sub">1.2 Andere Gesundheitsstörungen</h3>
+          <p class="help-block">Zum Beispiel Bluthochdruck, Herzerkrankung, Zuckerkrankheit, Bronchitis, Gelbsucht, Unfallfolgen.</p>
+          <div class="grid cols-2">
+            <label class="field">Haben oder hatten Sie noch andere Gesundheitsstörungen?
+              <select data-bind="g0110.andereStoerungen"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Art der Gesundheitsstörung<input type="text" data-bind="g0110.andereStoerungenArt" /></label>
+            <label class="field">Zeitangabe<input type="text" data-bind="g0110.andereZeit" /></label>
+          </div>
+          <h3 class="sub">1.3 Schwerbehinderung / Gleichstellung</h3>
+          <div class="grid cols-2">
+            <label class="field">Schwerbehinderung festgestellt oder gleichgestellt?
+              <select data-bind="g0110.schwerbehinderung"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Art der Behinderung<input type="text" data-bind="g0110.behinderungArt" /></label>
+            <label class="field">Grad der Behinderung<input type="text" data-bind="g0110.gdb" /></label>
+            <label class="field">Merkzeichen<input type="text" data-bind="g0110.merkzeichen" /></label>
+            <label class="field">seit<input type="text" data-bind="g0110.behindSeit" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>2 Berufliche Zukunft</h2>
+          <div class="checkrow">
+            <label><input type="checkbox" data-bind="g0110.zukunftBerufJa" /> im Beruf weiterhin arbeiten</label>
+            <label><input type="checkbox" data-bind="g0110.zukunftBerufNein" /> im Beruf nicht mehr arbeiten</label>
+            <label><input type="checkbox" data-bind="g0110.zukunftAndere" /> andere Arbeit suchen</label>
+            <label><input type="checkbox" data-bind="g0110.zukunftKeine" /> überhaupt nicht mehr arbeiten</label>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <h2>3 Arbeitsplatzbeschreibung</h2>
+          <p class="help-block">Tätigkeit, die zurzeit verrichtet wird oder zuletzt verrichtet wurde.</p>
+          <div class="grid cols-2">
+            <label class="field">Name und Anschrift des Arbeitgebers<textarea data-bind="g0110.agName"></textarea></label>
+            <label class="field">genaue Tätigkeit zurzeit / zuletzt<textarea data-bind="g0110.taetigkeit" placeholder="z. B. Lkw-Fahrer – nicht Kraftfahrer"></textarea></label>
+            <label class="field">beschäftigt seit<input type="text" data-bind="g0110.beschSeit" /></label>
+            <label class="field">Anzahl der Mitarbeiter im Betrieb<input type="text" data-bind="g0110.mitarbeiter" /></label>
+          </div>
+
+          <div class="wp-block">
+            <h3>Arbeitshaltung</h3>
+            <div class="haltung" id="haltung-grid">
+              <div></div>
+              <div class="h-head">ständig</div>
+              <div class="h-head">überwiegend</div>
+              <div class="h-head">zeitweise</div>
+            </div>
+          </div>
+
+          <div class="wp-block">
+            <h3>Heben / Tragen</h3>
+            <div class="grid cols-3">
+              <label class="field">Art der Lasten<input type="text" data-bind="g0110.lastenArt" /></label>
+              <label class="field">Gewichte häufig bis (kg)<input type="text" data-bind="g0110.gewichtHaeufig" /></label>
+              <label class="field">gelegentlich bis (kg)<input type="text" data-bind="g0110.gewichtGelegentlich" /></label>
+              <label class="field">Technische Hebehilfsmittel vorhanden?
+                <select data-bind="g0110.hebehilfe"><option>nein</option><option>ja</option></select>
+              </label>
+              <label class="field">ja, folgende<input type="text" data-bind="g0110.hebehilfeWelche" /></label>
+              <label class="field">weitere Bemerkungen<input type="text" data-bind="g0110.bemerkArbeit" /></label>
+            </div>
+          </div>
+
+          <div class="wp-block">
+            <h3>Arbeitsorganisation</h3>
+            <div class="grid cols-3">
+              <label class="field">Arbeitszeit: Stunden / Woche<input type="text" data-bind="g0110.stdWoche" /></label>
+              <label class="field">andere Arbeitszeitmodelle, Beschreibung<input type="text" data-bind="g0110.azModell" /></label>
+            </div>
+            <div class="wp-checks">
+              <label><input type="checkbox" data-bind="g0110.ganztags" /> Ganztagsarbeit</label>
+              <label><input type="checkbox" data-bind="g0110.teilzeit" /> Teilzeitarbeit</label>
+              <label><input type="checkbox" data-bind="g0110.azModelle" /> andere Arbeitszeitmodelle</label>
+              <label><input type="checkbox" data-bind="g0110.fruehspaet" /> regelmäßige Frühschicht / Spätschicht</label>
+              <label><input type="checkbox" data-bind="g0110.dreischicht" /> regelmäßige Dreischicht</label>
+              <label><input type="checkbox" data-bind="g0110.nachtschicht" /> nur Nachtschicht</label>
+              <label><input type="checkbox" data-bind="g0110.starrerTakt" /> starrer maschinengebundener Arbeitstakt</label>
+              <label><input type="checkbox" data-bind="g0110.einzelakkord" /> Einzelakkord</label>
+              <label><input type="checkbox" data-bind="g0110.gruppenakkord" /> Gruppenakkord</label>
+            </div>
+          </div>
+
+          <div class="wp-block">
+            <h3>Äußere Einflüsse</h3>
+            <div class="wp-checks">
+              <label><input type="checkbox" data-bind="g0110.kaelte" /> Kälte, Zugluft, Nässe</label>
+              <label><input type="checkbox" data-bind="g0110.hitze" /> Hitze</label>
+              <label><input type="checkbox" data-bind="g0110.staub" /> starke Staubentwicklung</label>
+              <label><input type="checkbox" data-bind="g0110.rauch" /> Rauchentwicklung</label>
+              <label><input type="checkbox" data-bind="g0110.laerm" /> starker Lärm</label>
+              <label><input type="checkbox" data-bind="g0110.laermschutz" /> Lärmschutz muss getragen werden</label>
+              <label><input type="checkbox" data-bind="g0110.erschuetterung" /> Erschütterungen / Vibrationen</label>
+              <label><input type="checkbox" data-bind="g0110.gerueche" /> Gerüche, Gase, Dämpfe</label>
+              <label><input type="checkbox" data-bind="g0110.hautreiz" /> hautreizende Stoffe</label>
+              <label><input type="checkbox" data-bind="g0110.atemreiz" /> atemwegsreizende Stoffe</label>
+              <label><input type="checkbox" data-bind="g0110.freien" /> überwiegend im Freien</label>
+              <label><input type="checkbox" data-bind="g0110.rohbau" /> überwiegend in Rohbauten</label>
+              <label><input type="checkbox" data-bind="g0110.witterung" /> überwiegend witterungsgeschützt</label>
+            </div>
+            <div class="grid cols-3" style="margin-top:10px;">
+              <label class="field">Gerüche, Gase, Dämpfe, welche?<input type="text" data-bind="g0110.geruecheWelche" /></label>
+              <label class="field">hautreizende Stoffe, welche?<input type="text" data-bind="g0110.hautreizWelche" /></label>
+              <label class="field">atemwegsreizende Stoffe, welche?<input type="text" data-bind="g0110.atemreizWelche" /></label>
+            </div>
+          </div>
+
+          <div class="wp-block">
+            <h3>Berufliches Kraftfahren</h3>
+            <div class="wp-checks">
+              <label><input type="checkbox" data-bind="g0110.pkw" /> Pkw</label>
+              <label><input type="checkbox" data-bind="g0110.lkw" /> Lkw</label>
+              <label><input type="checkbox" data-bind="g0110.baumasch" /> Baumaschinen / sonstige Fahrzeuge</label>
+              <label><input type="checkbox" data-bind="g0110.personenbef" /> Personenbeförderung</label>
+              <label><input type="checkbox" data-bind="g0110.gefahrgut" /> Gefahrguttransport</label>
+            </div>
+          </div>
+
+          <div class="wp-block">
+            <h3>Sonstiges</h3>
+            <div class="wp-checks">
+              <label><input type="checkbox" data-bind="g0110.publikum" /> Publikumsverkehr</label>
+              <label><input type="checkbox" data-bind="g0110.reise" /> häufige Reisetätigkeit</label>
+              <label><input type="checkbox" data-bind="g0110.auswaerts" /> Auswärts-Montage</label>
+              <label><input type="checkbox" data-bind="g0110.fuehrung" /> Mitarbeiterführung</label>
+              <label><input type="checkbox" data-bind="g0110.unfall" /> erhöhte Unfallgefahr</label>
+              <label><input type="checkbox" data-bind="g0110.konzent" /> außerordentliche Konzentration erforderlich</label>
+              <label><input type="checkbox" data-bind="g0110.anfahrt" /> lange Anfahrtszeiten</label>
+              <label><input type="checkbox" data-bind="g0110.keinePausen" /> keine geregelten Pausen</label>
+              <label><input type="checkbox" data-bind="g0110.bildschirm" /> überwiegend Bildschirmarbeit</label>
+              <label><input type="checkbox" data-bind="g0110.sehvermoegen" /> besondere Anforderungen an das Sehvermögen</label>
+            </div>
+            <div class="reveal" id="anfahrt-min">
+              <label class="field" style="max-width:240px;">Anfahrtszeit in Minuten<input type="text" data-bind="g0110.anfahrtMin" /></label>
+            </div>
+          </div>
+
+          <label class="field" style="margin-top:12px;">Bei welchen Tätigkeiten bestehen aktuell Einschränkungen?
+            <textarea data-bind="g0110.einschraenkungen"></textarea>
+          </label>
+          <label class="field">Weitere Bemerkungen zum Arbeitsplatz
+            <textarea data-bind="g0110.arbeitsplatzBem"></textarea>
+          </label>
+        </div>
+        <div class="card">
+          <h2>4 Arztbehandlungen</h2>
+          <p class="help-block">Bei welchen Ärztinnen/Ärzten waren Sie in den letzten 12 Monaten in Behandlung?</p>
+          <div class="grid cols-3">
+            <label class="field">Arzt 1 Name, Vorname und Anschrift<input type="text" data-bind="g0110.arzt1" /></label>
+            <label class="field">Fachrichtung<input type="text" data-bind="g0110.fach1" /></label>
+            <label class="field">Erkrankung<input type="text" data-bind="g0110.erk1" /></label>
+            <label class="field">Arzt 2 Name, Vorname und Anschrift<input type="text" data-bind="g0110.arzt2" /></label>
+            <label class="field">Fachrichtung<input type="text" data-bind="g0110.fach2" /></label>
+            <label class="field">Erkrankung<input type="text" data-bind="g0110.erk2" /></label>
+            <label class="field">Arzt 3 Name, Vorname und Anschrift<input type="text" data-bind="g0110.arzt3" /></label>
+            <label class="field">Fachrichtung<input type="text" data-bind="g0110.fach3" /></label>
+            <label class="field">Erkrankung<input type="text" data-bind="g0110.erk3" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h2>5 Begutachtungen</h2>
+          <p class="help-block">MDK, Agentur für Arbeit oder andere Stelle in den letzten 12 Monaten.</p>
+          <div class="grid cols-3">
+            <label class="field">Begutachtung in den letzten 12 Monaten?
+              <select data-bind="g0110.begutachtung"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Wann?<input type="text" data-bind="g0110.begutWann" /></label>
+            <label class="field">Von welcher Stelle?<input type="text" data-bind="g0110.begutStelle" /></label>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h2>6 Betriebsarzt / Werksarzt</h2>
+          <h3 class="sub">6.1 Arbeitsmedizinische Vorsorgeuntersuchungen</h3>
+          <div class="grid cols-2">
+            <label class="field">Nehmen Sie an arbeitsmedizinischen Vorsorgeuntersuchungen teil?
+              <select data-bind="g0110.vorsorge"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Falls ja, wegen<input type="text" data-bind="g0110.vorsorgeWegen" /></label>
+          </div>
+          <h3 class="sub">6.2 Betriebsarzt / Werksarzt vorhanden</h3>
+          <div class="grid cols-3">
+            <label class="field">Ist ein Betriebsarzt / Werksarzt vorhanden?
+              <select data-bind="g0110.betriebsarzt"><option>nein</option><option>ja</option></select>
+            </label>
+            <label class="field">Name<input type="text" data-bind="g0110.betriebsarztName" /></label>
+            <label class="field">Telefon<input type="tel" data-bind="g0110.betriebsarztTel" /></label>
+            <label class="field">Anschrift<input type="text" data-bind="g0110.betriebsarztAnschr" /></label>
+          </div>
+          <h3 class="sub">6.3 Einwilligung Kontakt Betriebsarzt</h3>
+          <label class="field">Einwilligung, dass sich RV-Träger / Reha-Arzt mit dem Betriebsarzt oder Betrieb in Verbindung setzt
+            <select data-bind="g0110.einwillBetrieb"><option value=""></option><option>ja</option><option>nein</option></select>
+          </label>
+          <h3 class="sub">Unterschrift</h3>
+          <p class="help-block">Finale Unterschrift der antragstellenden Person.</p>
+          <div class="grid cols-2">
+            <label class="field">Ort, Datum
+              <input type="text" data-bind="g0110.ortDatum" />
+            </label>
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0110.ortDatum"]'>Ort und Datum einfügen</button>
+            <button class="btn primary" type="button" data-pdf="G0110">G0110-Original ausfüllen</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-g0450">
+        <div class="page-head">
+          <h1>G0450 Sozialbericht</h1>
+          <p>Textbausteine stehen jeweils direkt über ihrem Textfeld. Ein Klick fügt den Baustein dort ein – ohne vorheriges Anklicken des Feldes. Platzhalter wie Name und Datum werden automatisch ersetzt.</p>
+        </div>
+        <div class="hint"><span data-fill="name"></span> · <span data-fill="diagnose"></span> · Aufnahme <span data-fill="aufnahme"></span> · <span data-fill="aufnehmend"></span></div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>1 Angaben zur Person</h2>
+          <p class="help-block">Name, Versicherung, Suchtform und aktueller Aufenthalt kommen aus den <button class="btn small" type="button" data-go="stammdaten">Stammdaten</button>.</p>
+          <div class="print-kv preview-kv">
+            <div>Name, Vorname</div><div><span data-fill="name"></span></div>
+            <div>Geburtsdatum</div><div><span data-fill="geburtsdatum"></span></div>
+            <div>Versicherungsnummer</div><div><span data-fill="vsnr"></span></div>
+            <div>Krankenkasse</div><div><span data-fill="kk"></span></div>
+            <div>Suchtform</div><div><span data-fill="sucht"></span></div>
+            <div>Aufnahme / Entlassung</div><div><span data-fill="aufnahme"></span> – <span data-fill="entlassung"></span></div>
+          </div>
+          <label class="field" style="margin-top:12px;">Behandelnde (auch Psychotherapeutin / Psychotherapeut; Name, Institution, Ort, Fachrichtung)
+            <input type="text" data-bind="stammdaten.behandelnde" placeholder="z. B. Klinikarzt der aktuellen Entgiftung" />
+          </label>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>2 Vorbehandlung der Abhängigkeitserkrankung</h2>
+          <h3 class="sub">2.1 Entzugsbehandlungen</h3>
+          <div class="grid cols-4">
+            <label class="field">Gesamtzahl<input type="text" data-bind="g0450.entgiftZahl" /></label>
+            <label class="field">letzte Klinik / Einrichtung<input type="text" data-bind="g0450.letzteKlinik" /></label>
+            <label class="field">von<input type="text" data-bind="g0450.letzteVon" placeholder="TT.MM.JJJJ" /></label>
+            <label class="field">bis<input type="text" data-bind="g0450.letzteBis" /></label>
+          </div>
+          <h3 class="sub">2.2 Leistungen zur medizinischen Rehabilitation bei Abhängigkeitserkrankungen</h3>
+          <p class="help-block">Durchführungsart: 1 stationär, 2 ganztägig ambulant, 3 ambulant, 4 Kombinationsbehandlung, 5 Adaption</p>
+          <div class="grid cols-4">
+            <label class="field">Reha 1 Name<input type="text" data-bind="g0450.reha1Name" /></label>
+            <label class="field">Art<input type="text" data-bind="g0450.reha1Art" /></label>
+            <label class="field">Jahr<input type="text" data-bind="g0450.reha1Jahr" /></label>
+            <label class="field">reguläre Entlassung
+              <select data-bind="g0450.reha1Regulaer"><option value=""></option><option>ja</option><option>nein</option></select>
+            </label>
+            <label class="field">Reha 2 Name<input type="text" data-bind="g0450.reha2Name" /></label>
+            <label class="field">Art<input type="text" data-bind="g0450.reha2Art" /></label>
+            <label class="field">Jahr<input type="text" data-bind="g0450.reha2Jahr" /></label>
+            <label class="field">regulär
+              <select data-bind="g0450.reha2Regulaer"><option value=""></option><option>ja</option><option>nein</option></select>
+            </label>
+            <label class="field">Reha 3 Name<input type="text" data-bind="g0450.reha3Name" /></label>
+            <label class="field">Art<input type="text" data-bind="g0450.reha3Art" /></label>
+            <label class="field">Jahr<input type="text" data-bind="g0450.reha3Jahr" /></label>
+            <label class="field">regulär
+              <select data-bind="g0450.reha3Regulaer"><option value=""></option><option>ja</option><option>nein</option></select>
+            </label>
+            <label class="field">Reha 4 Name<input type="text" data-bind="g0450.reha4Name" /></label>
+            <label class="field">Art<input type="text" data-bind="g0450.reha4Art" /></label>
+            <label class="field">Jahr<input type="text" data-bind="g0450.reha4Jahr" /></label>
+            <label class="field">regulär
+              <select data-bind="g0450.reha4Regulaer"><option value=""></option><option>ja</option><option>nein</option></select>
+            </label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>3 Anamnese der Abhängigkeitserkrankung</h2>
+          <h3 class="sub">3.1 Anamnesedaten (Substanz, pathologisches Verhalten, Beginn, Dauer, Dosis, Verlauf)</h3>
+          <div class="builder-panel">
+            <p class="help-block">Substanzen ankreuzen. Für jede Auswahl erscheinen Felder zu Beginn, aktueller Dosis und Verlauf. Daraus wird ein Standardsatz für das Formularfeld erzeugt.</p>
+            <div class="wp-checks" id="substanz-checks"></div>
+            <div id="substanz-details"></div>
+            <div class="toolbar" style="margin-top:10px;">
+              <button class="btn primary" type="button" id="btn-substanz-satz">Satz in 3.1 einfügen</button>
+            </div>
+          </div>
+          <textarea class="wide" data-bind="g0450.anamnese"></textarea>
+
+          <h3 class="sub">3.2 Körperliche Schädigungen und psychische Störungen</h3>
+          <p class="help-block">Krampfanfälle, Delir, Psychose, Wesensänderungen, Suizidversuche und andere.</p>
+          <div class="builder-panel">
+            <label class="field">Entzugssymptome
+              <button class="btn" type="button" id="btn-entzug-toggle">Entzugssymptome auswählen ▾</button>
+            </label>
+            <div class="dropdown-panel open" id="entzug-panel">
+              <div class="checkgrid" id="entzug-checks"></div>
+              <div class="toolbar" style="margin-top:10px;">
+                <button class="btn primary" type="button" id="btn-entzug-satz">Satz zu Entzugssymptomen einfügen</button>
+              </div>
+            </div>
+          </div>
+          <div class="bausteine" data-bausteine="schaedigungen" data-target='[data-bind="g0450.schaedigungen"]'></div>
+          <textarea data-bind="g0450.schaedigungen"></textarea>
+
+          <h3 class="sub">3.3 Abstinenzphasen (Dauer, Bedingungen, Lebenssituation)</h3>
+          <div class="bausteine" data-bausteine="abstinenz" data-target='[data-bind="g0450.abstinenz"]'></div>
+          <textarea data-bind="g0450.abstinenz"></textarea>
+
+          <h3 class="sub">3.4 aktuell abstinent</h3>
+          <div class="grid cols-3">
+            <label class="field">aktuell abstinent
+              <select data-bind="g0450.aktuellAbstinent"><option>ja</option><option>nein</option></select>
+            </label>
+            <label class="field">abstinent seit<input type="text" data-bind="g0450.abstinentSeit" /></label>
+          </div>
+          <h3 class="sub">3.5 Substitution</h3>
+          <p class="help-block">Gegebenenfalls seit wann und mit welchem Mittel (aktuelle Dosierung).</p>
+          <label class="field">Substitution
+            <textarea data-bind="g0450.substitution"></textarea>
+          </label>
+          <label class="field">Soll die Rehabilitation unter Substitution begonnen werden?
+            <select data-bind="g0450.rehaUnterSubstitution"><option>nein</option><option>ja</option></select>
+          </label>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>4 Sozialanamnese</h2>
+          <label class="field">4.1 Biographische und familiäre Ereignisse
+            <textarea class="wide" data-bind="g0450.entwicklung"></textarea>
+          </label>
+          <label class="field">4.2 Umweltfaktoren
+            <div class="bausteine" data-bausteine="sozial" data-target='[data-bind="g0450.umwelt"]'></div>
+            <textarea class="wide" data-bind="g0450.umwelt"></textarea>
+          </label>
+          <label class="field">4.2 Personbezogene Faktoren
+            <div class="bausteine" data-bausteine="person" data-target='[data-bind="g0450.personbezogen"]'></div>
+            <textarea data-bind="g0450.personbezogen"></textarea>
+          </label>
+          <h3 class="sub">4.3 Angaben zu Kindern</h3>
+          <div class="grid cols-3">
+            <label class="field">Anzahl<input type="text" data-bind="g0450.kinderAnzahl" /></label>
+            <label class="field">Alter<input type="text" data-bind="g0450.kinderAlter" /></label>
+            <label class="field">davon im Haushalt lebend<input type="text" data-bind="g0450.kinderHaushalt" /></label>
+          </div>
+          <label class="field">4.4 Schulischer und beruflicher Werdegang
+            <textarea data-bind="g0450.Werdegang"></textarea>
+          </label>
+          <div class="grid cols-2">
+            <label class="field">letzte Tätigkeit<span class="help">wird aus G0110 übernommen, hier unabhängig änderbar</span>
+              <input type="text" data-bind="g0450.letzteTaetigkeit" />
+            </label>
+            <label class="field">arbeitslos seit<input type="text" data-bind="g0450.arbeitslosSeit" /></label>
+          </div>
+          <label class="field">4.5 Hinderungsgründe (Strafverfahren, Bewährung …; ggf. G0435)
+            <div class="bausteine" data-bausteine="hinder" data-target='[data-bind="g0450.hinderung"]'></div>
+            <textarea data-bind="g0450.hinderung"></textarea>
+          </label>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>5 Verlauf der bisherigen Vorbetreuung / Beratung</h2>
+          <h3 class="sub">5.1 Beginn der Beratung im Vorfeld der beantragten Leistung</h3>
+          <div class="grid cols-3">
+            <label class="field">Beginn am<input type="text" data-bind="g0450.beratungAm" /></label>
+            <label class="field">Beratungsstelle / Einrichtung<input type="text" data-bind="g0450.beratungEinr" /></label>
+            <label class="field">letzter persönlicher Kontakt am<input type="text" data-bind="g0450.letzterKontakt" /></label>
+          </div>
+          <label class="field">5.2 Art (Einzel / Gruppe / Selbsthilfegruppe) und Umfang (Anzahl) der Kontakte
+            <div class="bausteine" data-bausteine="vorbetreuung" data-target='[data-bind="g0450.beratungArt"]'></div>
+            <textarea data-bind="g0450.beratungArt"></textarea>
+          </label>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>6 Rehabilitationsziele und Behandlungsbereitschaft</h2>
+          <label class="field">6.1 Individuelle Ziele und Behandlungsbereitschaft
+            <div class="bausteine" data-bausteine="ziele" data-target='[data-bind="g0450.rehaZiele"]'></div>
+            <textarea class="wide" data-bind="g0450.rehaZiele"></textarea>
+          </label>
+          <label class="field">6.2 Bei erneuter Beantragung: Problembereiche
+            <textarea data-bind="g0450.erneuteBeantragung"></textarea>
+          </label>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h2>7 Hinweise zur Leistungsform und zur Art der Rehabilitationseinrichtung</h2>
+          <label class="field">7.1 Schwerpunktsetzung für die medizinische Rehabilitation
+            <div class="bausteine" data-bausteine="schwerpunkt" data-target='[data-bind="g0450.schwerpunkt"]'></div>
+            <textarea data-bind="g0450.schwerpunkt"></textarea>
+          </label>
+          <label class="field">7.2 Wünsche zur Klinik / Leistungsform (Sprache, Barrierefreiheit, Tiere, Nahtlostermin …)
+            <textarea data-bind="g0450.wunschLeistform"></textarea>
+          </label>
+        </div>
+
+        <div class="card">
+          <h2>8 Zusammenfassung</h2>
+          <label class="field">Zusammenfassung und ergänzende Bemerkungen
+            <div class="toolbar">
+              <button class="btn primary" type="button" data-generate="zusammenfassung" data-target='[data-bind="g0450.zusammenfassung"]'>Rahmentext aus Stammdaten erzeugen</button>
+            </div>
+            <div class="bausteine" data-bausteine="zusammen" data-target='[data-bind="g0450.zusammenfassung"]'></div>
+            <textarea class="wide" style="min-height:220px;" data-bind="g0450.zusammenfassung"></textarea>
+          </label>
+          <h3 class="sub">Unterschrift</h3>
+          <p class="help-block">Ort und Datum am Ende des Sozialberichts (Unterschrift der aufnehmenden Person).</p>
+          <label class="field">Ort, Datum
+            <input type="text" data-bind="g0450.ortDatum" />
+          </label>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum" data-target='[data-bind="g0450.ortDatum"]'>Ort und Datum einfügen</button>
+            <button class="btn primary" type="button" data-pdf="G0450">G0450-Original ausfüllen</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-g0452">
+        <div class="page-head">
+          <h1>G0452 Einwilligung zum Sozialbericht</h1>
+          <p>Person und Krankenkasse kommen aus den Stammdaten. Bitte im Doppel ausfüllen und ein Exemplar aushändigen.</p>
+        </div>
+        <div class="card">
+          <h2>Weiterleitung an</h2>
+          <div class="checkrow">
+            <label><input type="checkbox" data-bind="g0452.traegerDRV" /> Rentenversicherungsträger</label>
+            <label><input type="checkbox" data-bind="g0452.traegerKK" /> Krankenkasse (MD)</label>
+            <label><input type="checkbox" data-bind="g0452.traegerEingliederung" /> Träger der Eingliederungshilfe</label>
+            <label><input type="checkbox" data-bind="g0452.traegerEinrichtung" /> Rehabilitationseinrichtung</label>
+          </div>
+          <div class="grid cols-2" style="margin-top:12px;">
+            <label class="field">Ort, Datum (Information)<input type="text" data-bind="g0452.ortDatum1" /></label>
+            <label class="field">Unterschrift Antragsteller/in (Information)<input type="text" data-bind="g0452.unterschrift1" /></label>
+            <label class="field">Ort, Datum (Einwilligung)<input type="text" data-bind="g0452.ortDatum2" /></label>
+            <label class="field">Unterschrift Einwilligung<input type="text" data-bind="g0452.unterschrift2" /></label>
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="button" data-generate="ortdatum-beide" data-target='[data-bind="g0452.ortDatum1"]'>Ort und Datum einfügen</button>
+            <button class="btn primary" type="button" data-pdf="G0452">G0452-Original ausfüllen</button>
+          </div>
+          <p class="status">Die Gesetzestexte (§§ 60–67 SGB I) stehen auf den Folgeseiten des Originalformulars in <code>forms/G0452.pdf</code>.</p>
+        </div>
+      </section>
+
+      <section class="view" id="view-druck">
+        <div class="page-head">
+          <h1>Originalformulare ausfüllen</h1>
+          <p>Die App schreibt in die echten DRV-Formblätter (nicht in ein neues Layout). Es entsteht eine ausgefüllte Kopie der Vorlage aus dem Ordner <code>forms/</code>.</p>
+        </div>
+        <div class="grid cols-2">
+          <div class="card">
+            <h2>Ausgefüllte DRV-Formblätter</h2>
+            <div class="toolbar">
+              <button class="btn" type="button" data-pdf="G0100">G0100</button>
+              <button class="btn" type="button" data-pdf="G0110">G0110</button>
+              <button class="btn" type="button" data-pdf="G0450">G0450</button>
+              <button class="btn" type="button" data-pdf="G0452">G0452</button>
+              <button class="btn primary" type="button" data-pdf="all">Alle vier</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Leere Vorlagen</h2>
+            <p><a href="forms/G0100.pdf" target="_blank">G0100 Rehabilitationsantrag</a><br />
+            <a href="forms/G0110.pdf" target="_blank">G0110 Anlage</a><br />
+            <a href="forms/G0450.pdf" target="_blank">G0450 Sozialbericht</a><br />
+            <a href="forms/G0452.pdf" target="_blank">G0452 Einwilligung</a></p>
+            <p class="status">Offline-Version: Die Originalvorlagen sind zusätzlich in JavaScript eingebettet. Kein Server erforderlich.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="page-head">
+          <h1>Einrichtung / Sozialdienst</h1>
+          <p>Diese Angaben erscheinen im Kopf jedes Sozialberichts und können pro Arbeitsplatz gespeichert werden.</p>
+        </div>
+        <div class="card">
+          <div class="grid cols-2">
+            <label class="field">Name der Beratungsstelle / Einrichtung<input type="text" data-bind="einrichtung" data-from="settings" /></label>
+            <label class="field">Station (optional)<input type="text" data-bind="station" data-from="settings" /></label>
+            <label class="field">Straße, Hausnummer<input type="text" data-bind="strasse" data-from="settings" /></label>
+            <label class="field">PLZ<input type="text" data-bind="plz" data-from="settings" /></label>
+            <label class="field">Ort<input type="text" data-bind="ort" data-from="settings" /></label>
+            <label class="field">Telefon<input type="tel" data-bind="telefon" data-from="settings" /></label>
+            <label class="field">Telefax<input type="tel" data-bind="telefax" data-from="settings" /></label>
+            <label class="field">E-Mail<input type="email" data-bind="email" data-from="settings" /></label>
+            <label class="field">Beruf der aufnehmenden Person<input type="text" data-bind="berufAufnehmend" data-from="settings" /></label>
+            <label class="field">Name der aufnehmenden Person<input type="text" data-bind="nameAufnehmend" data-from="settings" /></label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="print-root">
+    <article class="print-doc" id="print-g0100"></article>
+    <article class="print-doc" id="print-g0110"></article>
+    <article class="print-doc" id="print-g0450"></article>
+    <article class="print-doc" id="print-g0452"></article>
+  </div>
+
+  <script src="vendor/pdf-lib.min.js"></script>
+<script src="vendor/offline-G0100.js"></script>
+<script src="vendor/offline-G0110.js"></script>
+<script src="vendor/offline-G0450.js"></script>
+<script src="vendor/offline-G0452.js"></script>
+  <script src="js/pdf-fill.js"></script>
+  <script src="js/bausteine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
