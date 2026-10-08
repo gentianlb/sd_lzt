@@ -154,15 +154,32 @@
   const templates = {};
   async function templateBytes(code) {
     if (!templates[code]) {
-      const res = await fetch("forms/" + code + ".pdf");
-      if (!res.ok) {
-        throw new Error(
-          "Die Formularvorlage forms/" +
-            code +
-            ".pdf konnte nicht geladen werden. Bitte die App über einen lokalen Server öffnen (start.sh bzw. python3 -m http.server 8080)."
-        );
+      // START.html provides the exact original PDF bytes as local JavaScript resources.
+      // This path works from file:// without a web server or network requests.
+      const embedded = root.SDLZT_EMBEDDED_PDFS && root.SDLZT_EMBEDDED_PDFS[code];
+      if (typeof embedded === "string" && embedded.length) {
+        const raw = atob(embedded);
+        if (!raw.startsWith("%PDF-")) {
+          throw new Error("Ungültige eingebettete PDF-Vorlage für " + code + ".");
+        }
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+        templates[code] = bytes;
+      } else {
+        if (root.location.protocol === "file:") {
+          throw new Error(
+            "Offline-Vorlage " + code + " fehlt. Bitte START.html öffnen und den vollständigen ZIP-Ordner entpacken."
+          );
+        }
+        const res = await fetch("forms/" + code + ".pdf");
+        if (!res.ok) {
+          throw new Error(
+            "Die Formularvorlage forms/" + code + ".pdf konnte nicht geladen werden. " +
+            "Bitte die App über einen lokalen Server öffnen."
+          );
+        }
+        templates[code] = new Uint8Array(await res.arrayBuffer());
       }
-      templates[code] = new Uint8Array(await res.arrayBuffer());
     }
     return templates[code].slice();
   }
