@@ -324,9 +324,21 @@
     ["geruest", "auf Gerüsten / Leitern"],
   ];
 
+  // Some browsers restrict localStorage for file:// documents. Keep the UI usable
+  // even then; users can explicitly export/import local JSON backups.
+  let persistenceUnavailable = false;
+  function storedGet(key) {
+    try { return window.localStorage.getItem(key); }
+    catch (_) { persistenceUnavailable = true; return null; }
+  }
+  function storedSet(key, value) {
+    try { window.localStorage.setItem(key, value); }
+    catch (_) { persistenceUnavailable = true; }
+  }
+
   let settings = loadJson(STORAGE_SETTINGS, defaultSettings());
   let cases = loadJson(STORAGE_CASES, []);
-  let currentId = localStorage.getItem(STORAGE_CURRENT);
+  let currentId = storedGet(STORAGE_CURRENT);
   let current = cases.find((c) => c.id === currentId) || cases[0] || null;
   let lastFocus = null;
   let statusTimer = null;
@@ -379,7 +391,7 @@
   }
   function loadJson(key, fallback) {
     try {
-      const raw = localStorage.getItem(key);
+      const raw = storedGet(key);
       return raw ? JSON.parse(raw) : fallback;
     } catch {
       return fallback;
@@ -387,9 +399,9 @@
   }
   function saveAll() {
     if (current) current.geaendert = new Date().toISOString();
-    localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
-    localStorage.setItem(STORAGE_CASES, JSON.stringify(cases));
-    if (current) localStorage.setItem(STORAGE_CURRENT, current.id);
+    storedSet(STORAGE_SETTINGS, JSON.stringify(settings));
+    storedSet(STORAGE_CASES, JSON.stringify(cases));
+    if (current) storedSet(STORAGE_CURRENT, current.id);
   }
   function setStatus(msg, ok) {
     document.querySelectorAll("[data-status]").forEach((el) => {
@@ -1086,11 +1098,41 @@
     setStatus("JSON gespeichert", true);
   }
 
+  function exportAllJson() {
+    const blob = new Blob(
+      [JSON.stringify({ format: "sdlzt-backup-v1", exportedAt: new Date().toISOString(), settings, cases }, null, 2)],
+      { type: "application/json" }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "SD_LZT_Gesamtsicherung_" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    setStatus("Gesamtsicherung erstellt", true);
+  }
+
   function importJson(file) {
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const data = JSON.parse(reader.result);
+        if (data.format === "sdlzt-backup-v1" && Array.isArray(data.cases)) {
+          if (!confirm("Gesamtsicherung importieren? Die Fälle werden zusätzlich zu vorhandenen Fällen eingefügt.")) return;
+          if (data.settings) settings = { ...defaultSettings(), ...data.settings };
+          const incoming = data.cases.filter((c) => c && c.stammdaten).map((c) => {
+            c.id = uid();
+            migrateCase(c);
+            return c;
+          });
+          if (!incoming.length) throw new Error("Keine gültigen Fälle in der Sicherung");
+          cases = incoming.concat(cases);
+          current = incoming[0];
+          saveAll();
+          bindAll();
+          setStatus(incoming.length + " Fälle importiert", true);
+          return;
+        }
         if (data.settings) settings = { ...defaultSettings(), ...data.settings };
         const fall = data.fall || data;
         if (!fall.stammdaten) throw new Error("Keine Stammdaten");
@@ -1381,6 +1423,8 @@
     document.getElementById("btn-new").addEventListener("click", newCase);
     document.getElementById("btn-delete").addEventListener("click", deleteCurrent);
     document.getElementById("btn-export").addEventListener("click", exportJson);
+    const exportAllButton = document.getElementById("btn-export-all");
+    if (exportAllButton) exportAllButton.addEventListener("click", exportAllJson);
     document.getElementById("btn-import").addEventListener("change", (e) => {
       if (e.target.files[0]) importJson(e.target.files[0]);
       e.target.value = "";
@@ -1441,6 +1485,9 @@
     initEvents();
     bindAll();
     showView("start");
+    if (persistenceUnavailable) {
+      alert("Der Browser erlaubt für diese lokale HTML-Datei keine dauerhafte Speicherung. Bitte Fälle und Gesamtsicherung regelmäßig als JSON exportieren. PDF-Export funktioniert trotzdem.");
+    }
   }
 
   document.addEventListener("DOMContentLoaded", boot);
